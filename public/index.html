@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ONETOONE.booking - Réservation de logements</title>
+<link rel="icon" type="image/png" href="/icon-header-2.png">
+<link rel="apple-touch-icon" href="/icon-header-2.png">
+<style>
+:root {
+  --primary: #ff385c; --primary-dark: #e31c5f;
+  --bg: #f7f7f7; --card-bg: #fff;
+  --text: #222; --text-light: #717171;
+  --border: #eee; --shadow: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,.1);
+  --radius: 14px; --radius-sm: 10px;
+  --font: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--primary);text-decoration:none}
+button{cursor:pointer;font-family:inherit;font-size:inherit;border:none;background:none}
+input,select,textarea{font-family:inherit;font-size:inherit;width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);outline:0;transition:border-color .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--text)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 22px;border-radius:var(--radius-sm);font-weight:500;transition:all .2s;white-space:nowrap;font-size:14px}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 1px 4px rgba(255,56,92,.3)}.btn-primary:hover{background:var(--primary-dark);box-shadow:0 2px 8px rgba(255,56,92,.4)}
+.btn-outline{border:1.5px solid var(--border);color:var(--text);background:transparent}.btn-outline:hover{border-color:var(--text);background:rgba(0,0,0,.02)}
+.btn-ghost{color:var(--text);border-radius:24px}.btn-ghost:hover{background:rgba(0,0,0,.05)}
+.btn-sm{padding:7px 16px;font-size:13px}
+.btn-icon{width:38px;height:38px;padding:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+.btn-danger{background:#ef4444;color:#fff}.btn-danger:hover{background:#dc2626}
+.btn-success{background:#10b981;color:#fff}.btn-success:hover{background:#059669}
+
+/* ─── Header ─── */
+header{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;padding:0 24px;backdrop-filter:blur(12px);background:rgba(255,255,255,.96)}
+.header-inner{max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:80px}
+.logo{display:flex;align-items:center}
+.logo img{height:80px;width:auto;display:block}
+.header-right{display:flex;align-items:center;gap:8px}
+.header-right .btn-ghost{border-radius:24px;padding:8px 16px}
+.user-menu{position:relative}
+.user-btn{display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:24px;padding:6px 8px 6px 16px;transition:box-shadow .2s}
+.user-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.user-btn .avatar{width:30px;height:30px;border-radius:50%;background:var(--text-light);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.dropdown{position:absolute;top:calc(100% + 10px);right:0;background:#fff;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.12);min-width:230px;opacity:0;visibility:hidden;transform:translateY(-8px) scale(.98);transition:all .2s cubic-bezier(.25,.46,.45,.94);z-index:200;padding:8px;border:1px solid var(--border)}
+.dropdown.open{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+.dropdown .dropdown-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;width:100%;font-size:14px;transition:background .15s}
+.dropdown .dropdown-item:hover{background:var(--bg)}
+.dropdown hr{margin:6px 0;border:none;border-top:1px solid var(--border)}
+.dropdown .badge{background:var(--primary);color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;margin-left:auto}
+
+/* ─── Verification banner ─── */
+.verify-banner{background:#fef3c7;border-bottom:1px solid #fde68a;padding:10px 24px;text-align:center;font-size:14px;color:#92400e;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.verify-banner a{color:#92400e;font-weight:600;text-decoration:underline;cursor:pointer}
+.verify-banner a:hover{color:#78350f}
+
+/* ─── Hero ─── */
+.hero{background:linear-gradient(135deg,#ff385c 0%,#d61f4f 50%,#8b1a4a 100%);color:#fff;padding:64px 24px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 50%,rgba(255,255,255,.06) 0%,transparent 50%);pointer-events:none}
+.hero h1{font-size:44px;font-weight:800;margin-bottom:12px;letter-spacing:-.5px}
+.hero p{font-size:17px;opacity:.92;max-width:580px;margin:0 auto 28px;line-height:1.6}
+.hero .search-box{display:flex;max-width:520px;margin:0 auto;background:#fff;border-radius:50px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.25)}
+.hero .search-box input{border:none;padding:14px 22px;flex:1;font-size:16px}
+.hero .search-box input::placeholder{color:#aaa}
+.hero .search-box button{background:var(--primary);color:#fff;padding:14px 28px;font-weight:600;font-size:15px;border-radius:0 50px 50px 0;transition:background .2s}
+.hero .search-box button:hover{background:var(--primary-dark)}
+
+/* ─── Mobile search ─── */
+.mobile-search{display:none;padding:12px 16px;background:#fff;border-bottom:1px solid var(--border)}
+.mobile-search .search-box{display:flex;background:var(--bg);border-radius:24px;overflow:hidden;border:1px solid var(--border)}
+.mobile-search .search-box input{border:none;background:transparent;padding:10px 14px;flex:1;font-size:14px}
+.mobile-search .search-box button{background:var(--primary);color:#fff;padding:10px 14px}
+
+/* ─── Categories ─── */
+.categories{background:#fff;border-bottom:1px solid var(--border)}
+.categories-inner{max-width:1440px;margin:0 auto;padding:16px 24px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.categories-inner::-webkit-scrollbar{display:none}
+.cat-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 16px;border-radius:10px;white-space:nowrap;font-size:12px;color:var(--text-light);transition:all .2s;flex-shrink:0;border:none;background:transparent;position:relative}
+.cat-btn::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:2px;background:var(--primary);border-radius:2px;transition:width .25s}
+.cat-btn:hover{color:var(--text);background:rgba(0,0,0,.03)}
+.cat-btn.active{color:var(--primary)}
+.cat-btn.active::after{width:20px}
+.cat-btn .cat-icon{font-size:24px;margin-bottom:2px}
+
+/* ─── Main content ─── */
+main{max-width:1440px;margin:0 auto;padding:24px}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.section-header h2{font-size:26px;font-weight:700;letter-spacing:-.3px}
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ─── Listings grid ─── */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:800px 100%;animation:shimmer 1.5s infinite}
+.skeleton-card .skeleton-img{width:100%;padding-top:66%;border-radius:var(--radius);margin-bottom:12px}
+.skeleton-card .skeleton-line{height:14px;border-radius:4px;margin-bottom:8px}.skeleton-card .skeleton-line:last-child{width:60%}
+
+.listings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:8px}
+.listing-card{background:var(--card-bg);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .25s cubic-bezier(.25,.46,.45,.94),box-shadow .25s ease;border:1px solid var(--border)}
+.listing-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.listing-card .img-wrap{position:relative;padding-top:66%;overflow:hidden;background:#eee}
+.listing-card .img-wrap img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;transition:transform .4s;opacity:0}
+.listing-card .img-wrap img.loaded{opacity:1}
+.listing-card:hover .img-wrap img{transform:scale(1.05)}
+.listing-card .superhost-badge{position:absolute;top:10px;left:10px;background:var(--primary);color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px}
+.listing-card .fav-btn{position:absolute;top:10px;right:10px;background:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.15);opacity:0;transition:opacity .3s}
+.listing-card:hover .fav-btn{opacity:1}
+.listing-card .card-body{padding:14px}
+.listing-card .card-body .card-title{font-weight:600;font-size:15px;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.listing-card .card-body .card-sub{font-size:13px;color:var(--text-light);margin-bottom:6px}
+.listing-card .card-body .card-price{font-weight:600;font-size:15px}
+.listing-card .card-body .card-price span{font-weight:400;color:var(--text-light);font-size:13px}
+.listing-card .card-body .card-rating{display:flex;align-items:center;gap:4px;font-size:13px}
+
+/* ─── Fade in animation ─── */
+.fade-in{opacity:0;transform:translateY(12px);transition:opacity .5s ease,transform .5s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+
+/* ─── Modal ─── */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:all .25s;padding:20px}
+.modal-overlay.open{opacity:1;visibility:visible}
+.modal{background:#fff;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.97);transition:transform .3s cubic-bezier(.25,.46,.45,.94);position:relative}
+.modal-overlay.open .modal{transform:translateY(0) scale(1)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:1}
+.modal-header h3{font-size:18px;font-weight:600}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.modal-close{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s}
+.modal-close:hover{background:var(--bg)}
+.modal-wide{max-width:900px}
+
+/* ─── Listing detail ─── */
+.detail-gallery{display:grid;grid-template-columns:2fr 1fr;gap:4px;border-radius:var(--radius);overflow:hidden;margin-bottom:20px}
+.detail-gallery img{width:100%;height:300px;object-fit:cover;cursor:pointer}
+.detail-gallery .grid-2{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px}
+.detail-gallery .grid-2 img{height:148px}
+.detail-info h2{font-size:24px;margin-bottom:4px}
+.detail-info .host-line{font-size:14px;color:var(--text-light);margin-bottom:16px}
+.detail-info .divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+.detail-info .amenities{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.detail-info .amenities span{background:var(--bg);padding:6px 12px;border-radius:6px;font-size:13px}
+.detail-info .price-box{border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.detail-info .price-box .big-price{font-size:28px;font-weight:700}
+.detail-info .price-box .per-night{color:var(--text-light);font-size:14px}
+.booking-form{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.booking-form .date-row{display:flex;gap:8px}
+.booking-form .date-row input{flex:1}
+.price-detail{font-size:14px;margin-top:8px;padding-top:12px;border-top:1px solid var(--border)}
+.price-detail .price-line{display:flex;justify-content:space-between;margin-bottom:4px}
+.price-detail .price-total{display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding-top:12px;border-top:1px solid var(--border);margin-top:8px}
+
+/* ─── Auth ─── */
+.auth-form{display:flex;flex-direction:column;gap:14px}
+.auth-form label{font-weight:500;font-size:14px}
+.auth-form .switch{text-align:center;font-size:14px;color:var(--text-light);margin-top:4px}
+.auth-form .switch a{color:var(--primary);font-weight:500;cursor:pointer}
+
+/* ─── Host dashboard ─── */
+.host-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--card-bg);border-radius:var(--radius);padding:20px;text-align:center;box-shadow:var(--shadow);border:1px solid var(--border);transition:transform .2s,box-shadow .2s}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.stat-card .stat-value{font-size:30px;font-weight:800;color:var(--primary);letter-spacing:-.5px}
+.stat-card .stat-label{font-size:13px;color:var(--text-light);margin-top:4px;font-weight:500}
+.tabs{display:flex;gap:4px;background:var(--bg);padding:4px;border-radius:var(--radius-sm);margin-bottom:24px;width:fit-content;border:1px solid var(--border)}
+.tab{padding:9px 22px;border-radius:6px;font-weight:500;font-size:14px;color:var(--text-light);transition:all .2s}
+.tab:hover{color:var(--text)}
+.tab.active{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+.empty-state{text-align:center;padding:60px 24px;color:var(--text-light)}
+.empty-state .empty-icon{font-size:48px;margin-bottom:12px}
+.empty-state h3{font-size:18px;color:var(--text);margin-bottom:6px}
+.host-table{width:100%;border-collapse:collapse;font-size:14px}
+.host-table th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--text-light);font-weight:500;font-size:13px}
+.host-table td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.host-table .thumb{width:48px;height:36px;border-radius:4px;object-fit:cover}
+.host-table .status{display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:500}
+.status-pending{background:#fef3c7;color:#92400e}
+.status-confirmed{background:#d1fae5;color:#065f46}
+.status-cancelled{background:#fee2e2;color:#991b1b}
+.status-completed{background:#dbeafe;color:#1e40af}
+
+/* ─── Listing editor form ─── */
+.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.editor-grid .full{grid-column:1/-1}
+.editor-grid label{font-weight:500;font-size:13px;margin-bottom:4px;display:block}
+.image-previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.image-previews img{width:80px;height:60px;border-radius:6px;object-fit:cover;cursor:pointer}
+.image-previews img:hover{opacity:.7}
+
+/* ─── Profile ─── */
+.profile-info{padding:20px 0}
+.profile-info .field{margin-bottom:16px}
+.profile-info .field label{font-size:12px;color:var(--text-light);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.profile-info .field p{font-size:16px;font-weight:500;margin-top:2px}
+
+/* ─── Responsive ─── */
+@media(max-width:768px){
+  header{padding:0 16px}
+  .hero h1{font-size:28px}
+  .hero p{font-size:15px}
+  .listings-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+  .mobile-search{display:block}
+  .hero .search-box{display:none}
+  .detail-gallery{grid-template-columns:1fr}
+  .detail-gallery img{height:220px}
+  .detail-gallery .grid-2{display:none}
+  .host-stats{grid-template-columns:repeat(2,1fr)}
+  .editor-grid{grid-template-columns:1fr}
+  .modal{max-width:100%;border-radius:12px 12px 0 0;max-height:95vh;margin-top:auto}
+  .modal-overlay{align-items:flex-end}
+  .host-table{font-size:12px}
+  .host-table th,.host-table td{padding:8px 6px}
+  .section-header h2{font-size:20px}
+}
+
+/* ─── Toast ─── */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:1000;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 20px;border-radius:var(--radius-sm);color:#fff;font-weight:500;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:slideIn .3s ease,slideOut .3s ease 4.7s forwards}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(120%);opacity:0}}
+.toast.success{background:#10b981}
+.toast.error{background:#ef4444}
+.toast.info{background:var(--primary)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="/" onclick="home()"><img src="/image-cover.png" alt="ONETOONE.booking"></a>
+    <div class="header-right">
+      <button class="btn-ghost btn-sm" id="becomeHostBtn" onclick="becomeHost()">Devenez hôte</button>
+      <div class="user-menu" id="userMenu">
+        <button class="user-btn" onclick="toggleDropdown()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h11A1.5 1.5 0 0 1 15 2.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 13.5v-11z"/></svg>
+          <div class="avatar" id="avatarDisplay">&#9783;</div>
+        </button>
+        <div class="dropdown" id="dropdown">
+          <button class="dropdown-item" id="loginBtn" onclick="showAuth()">Connexion</button>
+          <button class="dropdown-item" id="signupBtn" onclick="showAuth(true)">Inscription</button>
+          <hr id="guestDivider">
+          <div id="authItems" style="display:none">
+            <button class="dropdown-item" onclick="showProfile()">&#128100; Profil</button>
+            <button class="dropdown-item" onclick="showMyBookings()">&#128197; Mes réservations</button>
+            <hr>
+            <button class="dropdown-item" id="hostDropdownBtn" style="display:none" onclick="showHostDashboard()">&#127968; Tableau de bord hôte</button>
+            <button class="dropdown-item" id="clientModeBtn" style="display:none" onclick="toggleClientMode()">&#128100; Mode client</button>
+            <button class="dropdown-item" onclick="becomeHost()">&#127958; Devenez hôte</button>
+            <hr>
+            <button class="dropdown-item" onclick="logout()">&#128682; Déconnexion</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div id="verifyBanner" class="verify-banner" style="display:none">
+  &#128994; Vérifiez votre email pour activer toutes les fonctionnalités.
+  <a onclick="resendVerification()">Renvoyer l'email</a>
+</div>
+
+<div class="mobile-search">
+  <div class="search-box">
+    <input placeholder="Où allez-vous ?" id="mobileSearchInput" onkeydown="if(event.key==='Enter')doSearch(document.getElementById('mobileSearchInput').value)">
+    <button onclick="doSearch(document.getElementById('mobileSearchInput').value)">&#128269;</button>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>Voyagez chez ONETOONE</h1>
+  <p>Réservez des logements uniques partout en France, directement auprès d'hôtes passionnés.</p>
+  <div class="search-box">
+    <input placeholder="Où allez-vous ?" id="searchInput" onkeydown="if(event.key==='Enter')doSearch(this.value)">
+    <button onclick="doSearch(document.getElementById('searchInput').value)">Rechercher</button>
+  </div>
+</div>
+
+<div class="categories">
+  <div class="categories-inner" id="categories"></div>
+</div>
+
+<main id="main">
+  <div class="section-header">
+    <h2 id="sectionTitle">Logements populaires</h2>
+    <div class="filter-bar" id="filterBar">
+      <button class="btn btn-outline btn-sm" onclick="sortListings('rating')">&#9733; Mieux notés</button>
+      <button class="btn btn-outline btn-sm" onclick="sortListings('price')">&#36; Prix croissant</button>
+      <button class="btn btn-outline btn-sm" onclick="sortListings('newest')">&#128197; Plus récents</button>
+    </div>
+  </div>
+  <div class="listings-grid" id="listingsGrid"></div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Modal</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+const API = 'https://onetoonebooking.onrender.com'
+let state = { user: null, token: null, listings: [], currentListing: null, currentSort: 'rating', currentCategory: null, currentSearch: '' }
+let clientMode = false
+
+/* ─── Utils ─── */
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toastContainer')
+  const t = document.createElement('div')
+  t.className = `toast ${type}`
+  t.textContent = msg
+  c.appendChild(t)
+  setTimeout(() => t.remove(), 5000)
+}
+
+async function safeJson(res) {
+  const text = await res.text()
+  try { return JSON.parse(text) } catch { throw new Error(text || `Erreur ${res.status}`) }
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function plural(n, s) { return n > 1 ? s + 's' : s }
+
+/* ─── Auth ─── */
+function loadAuth() {
+  try {
+    const t = localStorage.getItem('token')
+    const u = JSON.parse(localStorage.getItem('user'))
+    if (t && u) { state.token = t; state.user = u; updateUI() }
+  } catch {}
+}
+
+function updateUI() {
+  const u = state.user
+  document.getElementById('avatarDisplay').textContent = u ? u.name.charAt(0).toUpperCase() : '☰'
+  document.getElementById('loginBtn').style.display = u ? 'none' : ''
+  document.getElementById('signupBtn').style.display = u ? 'none' : ''
+  document.getElementById('guestDivider').style.display = u ? 'none' : ''
+  document.getElementById('authItems').style.display = u ? '' : 'none'
+  document.getElementById('hostDropdownBtn').style.display = u && u.isHost && !clientMode ? '' : 'none'
+  document.getElementById('clientModeBtn').style.display = u && u.isHost ? '' : 'none'
+  document.getElementById('clientModeBtn').innerHTML = clientMode ? '&#127968; Mode hôte' : '&#128100; Mode client'
+  const banner = document.getElementById('verifyBanner')
+  if (u && !u.verified) { banner.style.display = 'flex' } else { banner.style.display = 'none' }
+}
+
+/* ─── Auth modal ─── */
+function showAuth(isSignup = false) {
+  closeDropdown()
+  const mode = isSignup ? 'signup' : 'login'
+  showModal(
+    mode === 'signup' ? 'Créer un compte' : 'Connexion',
+    `<form class="auth-form" onsubmit="handleAuth(event, '${mode}')">
+      ${mode === 'signup' ? `<label>Nom</label><input name="name" placeholder="Votre nom" required>` : ''}
+      <label>Email</label><input type="email" name="email" placeholder="vous@exemple.fr" required>
+      <label>Mot de passe</label><input type="password" name="password" placeholder="Votre mot de passe" minlength="4" required>
+      ${mode === 'signup' ? '<label>Confirmer le mot de passe</label><input type="password" name="confirmPassword" placeholder="Confirmez votre mot de passe" minlength="4" required>' : ''}
+      <button class="btn btn-primary" style="width:100%;margin-top:4px">${mode === 'signup' ? 'Inscription' : 'Connexion'}</button>
+      <div class="switch">
+        ${mode === 'signup' ? 'Déjà un compte ? <a onclick="showAuth(false)">Connectez-vous</a>' : 'Pas de compte ? <a onclick="showAuth(true)">Inscrivez-vous</a>'}
+      </div>
+    </form>`,
+    ''
+  )
+}
+
+async function handleAuth(e, mode) {
+  e.preventDefault()
+  const fd = new FormData(e.target)
+  const body = mode === 'signup'
+    ? { name: fd.get('name'), email: fd.get('email'), password: fd.get('password'), confirmPassword: fd.get('confirmPassword') }
+    : { email: fd.get('email'), password: fd.get('password') }
+  try {
+    const r = await fetch(`${API}/api/auth/${mode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const d = await safeJson(r)
+    if (!r.ok) throw new Error(d.error || 'Erreur authentification')
+    if (mode === 'signup') {
+      closeModal(); toast(d.message, 'success')
+    } else {
+      state.token = d.token; state.user = d.user
+      localStorage.setItem('token', d.token); localStorage.setItem('user', JSON.stringify(d.user))
+      updateUI(); closeModal(); toast('Connecté avec succès !', 'success')
+      loadListings()
+    }
+  } catch (err) { toast(err.message, 'error') }
+}
+
+async function resendVerification() {
+  try {
+    const r = await fetch(`${API}/api/auth/resend-verification`, { method: 'POST', headers: { 'Authorization': `Bearer ${state.token}` } })
+    const d = await safeJson(r)
+    if (!r.ok) throw new Error(d.error || 'Erreur renvoi')
+    toast(d.message, 'success')
+  } catch (err) { toast(err.message, 'error') }
+}
+
+function logout() {
+  closeDropdown()
+  state.token = null; state.user = null
+  localStorage.removeItem('token'); localStorage.removeItem('user')
+  updateUI(); toast('Déconnecté', 'info')
+  if (document.getElementById('hostDashboard')?.style.display !== 'none') home()
+}
+
+async function becomeHost() {
+  if (!state.user) { showAuth(); return }
+  if (state.user.isHost) { showHostDashboard(); return }
+  closeDropdown()
+  showModal('Devenir hôte',
+    `<p style="margin-bottom:16px">Inscrivez-vous en tant qu'hôte pour publier vos logements et gérer vos réservations.</p>
+    <form class="auth-form" onsubmit="handleBecomeHost(event)">
+      <label>Téléphone (optionnel)</label><input name="phone" placeholder="06 xx xx xx xx">
+      <p style="font-size:13px;color:var(--text-light)">En devenant hôte, vous acceptez de partager vos annonces sur notre plateforme.</p>
+      <button class="btn btn-primary" style="width:100%">Devenir hôte</button>
+    </form>`, '')
+}
+
+async function handleBecomeHost(e) {
+  e.preventDefault()
+  const phone = e.target.phone.value
+  try {
+    const r = await fetch(`${API}/api/auth/host`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ phone }) })
+    const d = await safeJson(r)
+    if (!r.ok) {
+      if (d.needsVerification) {
+        closeModal(); toast('Veuillez d\'abord vérifier votre email.', 'info')
+        resendVerification()
+      } else { throw new Error(d.error) }
+      return
+    }
+    state.token = d.token; state.user = d.user
+    localStorage.setItem('token', d.token); localStorage.setItem('user', JSON.stringify(d.user))
+    updateUI(); closeModal(); toast('Vous êtes maintenant hôte !', 'success')
+    showHostDashboard()
+  } catch (err) { toast(err.message, 'error') }
+}
+
+function toggleClientMode() {
+  clientMode = !clientMode
+  closeDropdown()
+  if (clientMode) { home(); toast('Mode client activé', 'info') }
+  else { showHostDashboard() }
+  updateUI()
+}
+
+/* ─── Dropdown ─── */
+function toggleDropdown() { document.getElementById('dropdown').classList.toggle('open') }
+function closeDropdown() { document.getElementById('dropdown').classList.remove('open') }
+document.addEventListener('click', e => { if (!e.target.closest('.user-menu')) closeDropdown() })
+
+/* ─── Modal ─── */
+function showModal(title, body, footer = '', wide = false) {
+  document.getElementById('modalTitle').textContent = title
+  document.getElementById('modalBody').innerHTML = body
+  document.getElementById('modalFooter').innerHTML = footer
+  document.getElementById('modal').className = `modal${wide ? ' modal-wide' : ''}`
+  document.getElementById('modalOverlay').classList.add('open')
+  document.body.style.overflow = 'hidden'
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open')
+  document.body.style.overflow = ''
+  setTimeout(() => { document.getElementById('modalTitle').textContent = 'Modal'; document.getElementById('modalBody').innerHTML = ''; document.getElementById('modalFooter').innerHTML = '' }, 200)
+}
+document.getElementById('modalOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal() })
+
+/* ─── Home ─── */
+function home() {
+  state.currentCategory = null; state.currentSearch = ''
+  document.getElementById('sectionTitle').textContent = 'Logements populaires'
+  loadListings(); loadCategories()
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'))
+}
+
+/* ─── Categories ─── */
+async function loadCategories() {
+  try {
+    const r = await fetch(`${API}/api/categories`)
+    const cats = await safeJson(r)
+    if (!r.ok) return
+    const icons = { maisons:'🏠', 'sejour-nature':'🌿', montagne:'⛰️', plage:'🏖️', ville:'🏙️', camping:'🏕️', piscine:'🏊', vignobles:'🍷', insolite:'✨', arctique:'❄️' }
+    const labels = { maisons:'Maisons', 'sejour-nature':'Séjour nature', montagne:'Montagne', plage:'Plage', ville:'Ville', camping:'Camping', piscine:'Piscine', vignobles:'Vignobles', insolite:'Insolite', arctique:'Arctique' }
+    const c = document.getElementById('categories')
+    c.innerHTML = `<button class="cat-btn active" onclick="filterCategory('')"><span class="cat-icon">🌟</span>Tout</button>`
+    cats.forEach(cat => {
+      c.innerHTML += `<button class="cat-btn" onclick="filterCategory('${cat.category}')"><span class="cat-icon">${icons[cat.category]||'📍'}</span>${labels[cat.category]||cat.category}</button>`
+    })
+  } catch {}
+}
+
+function filterCategory(cat) {
+  state.currentCategory = cat
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'))
+  event.target.closest('.cat-btn').classList.add('active')
+  document.getElementById('sectionTitle').textContent = cat ? document.querySelector('.cat-btn.active').textContent.trim() : 'Logements populaires'
+  loadListings()
+}
+
+function doSearch(q) {
+  state.currentSearch = q
+  state.currentCategory = null
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'))
+  document.querySelector('.cat-btn:first-child')?.classList.add('active')
+  document.getElementById('sectionTitle').textContent = q ? `Résultats pour "${q}"` : 'Logements populaires'
+  loadListings()
+}
+
+function sortListings(sort) {
+  state.currentSort = sort
+  loadListings()
+}
+
+async function loadListings() {
+  const grid = document.getElementById('listingsGrid')
+  grid.innerHTML = Array(8).fill(0).map(() =>
+    `<div class="listing-card skeleton-card"><div class="skeleton-img skeleton"></div><div class="card-body"><div class="skeleton-line skeleton"></div><div class="skeleton-line skeleton"></div></div></div>`
+  ).join('')
+  try {
+    const params = new URLSearchParams({ sort: state.currentSort, limit: 50 })
+    if (state.currentCategory) params.set('category', state.currentCategory)
+    if (state.currentSearch) params.set('search', state.currentSearch)
+    const r = await fetch(`${API}/api/listings?${params}`)
+    const listings = await safeJson(r)
+    state.listings = listings
+    if (!listings.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--text-light)">Aucun logement trouvé</div>'; return }
+    grid.innerHTML = listings.map(l => `
+      <div class="listing-card fade-in" onclick="showListingDetail('${l.id}')">
+        <div class="img-wrap">
+          ${l.superhost ? '<div class="superhost-badge">Superhost</div>' : ''}
+          <img src="${l.images?.[0]||'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop'}" loading="lazy" onload="this.classList.add('loaded')" onerror="this.src='https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop';this.classList.add('loaded')">
+        </div>
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="card-title">${l.title}</div>
+            <div class="card-rating">&#9733; ${l.rating}</div>
+          </div>
+          <div class="card-sub">${l.city} · ${l.type}</div>
+          <div class="card-price">${l.price}€<span> / nuit</span></div>
+        </div>
+      </div>
+    `).join('')
+    requestAnimationFrame(() => { document.querySelectorAll('.fade-in').forEach((el, i) => setTimeout(() => el.classList.add('visible'), i * 40)) })
+  } catch (err) { grid.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-light)">Erreur de chargement</div>'; toast(err.message, 'error') }
+}
+
+let currentDetailListing = null
+
+async function showListingDetail(id) {
+  try {
+    const r = await fetch(`${API}/api/listings/${id}`)
+    const l = await safeJson(r)
+    currentDetailListing = l
+    const extraImages = l.images?.slice(1, 4) || []
+    const hostBadge = l.superhost ? 'Superhost' : 'Hôte'
+    showModal(l.title, `
+      <div class="detail-gallery">
+        <img src="${l.images?.[0]||'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop'}" onclick="window.open('${l.images?.[0]||''}')">
+        <div class="grid-2">
+          ${extraImages.length <= 2
+            ? extraImages.map(img => `<img src="${img}" onclick="window.open('${img}')">`).join('') + Array(2 - extraImages.length).fill('<img src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop">').join('')
+            : extraImages.slice(0, 3).map(img => `<img src="${img}" onclick="window.open('${img}')">`).join('')
+          }
+        </div>
+      </div>
+      <div class="detail-info">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <h2>${l.title}</h2>
+            <div class="host-line">${l.city}, ${l.country} · ${l.type} · ${hostBadge} : ${l.hostName}</div>
+          </div>
+          <div style="text-align:right;font-size:14px">
+            <div>&#9733; ${l.rating} (${l.reviewCount} avis)</div>
+          </div>
+        </div>
+        <hr class="divider">
+        <div style="display:flex;gap:24px;font-size:15px;flex-wrap:wrap">
+          <span>&#128101; ${l.guests} ${plural(l.guests,'voyageur')}</span>
+          <span>&#128716; ${l.bedrooms} ${plural(l.bedrooms,'chambre')}</span>
+          <span>&#128719; ${l.beds} ${plural(l.beds,'lit')}</span>
+          <span>&#128703; ${l.baths} ${plural(l.baths,'salle de bain')}</span>
+        </div>
+        <hr class="divider">
+        <p>${l.description || 'Logement confortable et bien situé.'}</p>
+        ${l.amenities?.length ? `<div class="amenities">${l.amenities.map(a => `<span>${a}</span>`).join('')}</div>` : ''}
+        <hr class="divider">
+        <div class="price-box">
+          <div class="big-price">${l.price}€ <span class="per-night">/ nuit</span></div>
+          <form class="booking-form" onsubmit="handleBooking(event, '${l.id}')">
+            <div class="date-row">
+              <input type="date" name="checkIn" required min="${new Date().toISOString().split('T')[0]}" placeholder="Arrivée">
+              <input type="date" name="checkOut" required min="${new Date().toISOString().split('T')[0]}" placeholder="Départ">
+            </div>
+            <input type="number" name="guests" min="1" max="${l.guests}" value="1" placeholder="Voyageurs">
+            <input name="message" placeholder="Message à l'hôte (optionnel)">
+            <button class="btn btn-primary" style="width:100%">Réserver</button>
+          </form>
+        </div>
+        ${l.reviews?.length ? `
+          <hr class="divider">
+          <h3 style="margin-bottom:12px">Avis (${l.reviewCount})</h3>
+          ${l.reviews.slice(0, 5).map(r => `
+            <div style="margin-bottom:12px">
+              <strong>${r.userName}</strong> · <span style="color:var(--text-light);font-size:13px">${formatDate(r.createdAt)}</span>
+              <div>&#9733; ${r.rating}</div>
+              ${r.comment ? '<p style="font-size:14px;margin-top:4px">'+r.comment+'</p>' : ''}
+            </div>
+          `).join('')}
+        ` : ''}
+      </div>
+    `, '', true)
+  } catch (err) { toast(err.message, 'error') }
+}
+
+async function handleBooking(e, listingId) {
+  e.preventDefault()
+  if (!state.user) { showAuth(); return }
+  const fd = new FormData(e.target)
+  const checkIn = fd.get('checkIn'); const checkOut = fd.get('checkOut')
+  try {
+    const r = await fetch(`${API}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ listingId, checkIn, checkOut, guests: Number(fd.get('guests'))||1, message: fd.get('message') }) })
+    const d = await safeJson(r)
+    if (!r.ok) throw new Error(d.error || 'Erreur réservation')
+    toast(d.message, 'success')
+    closeModal()
+  } catch (err) { toast(err.message, 'error') }
+}
+
+/* ─── Host Dashboard ─── */
+let hostTab = 'listings'
+
+function showHostDashboard() {
+  closeDropdown(); closeModal()
+  const main = document.getElementById('main')
+  main.innerHTML = `
+    <div id="hostDashboard">
+      <div class="section-header">
+        <h2>&#127968; Tableau de bord hôte</h2>
+        <button class="btn btn-primary" onclick="showListingEditor()">+ Nouveau logement</button>
+      </div>
+      <div class="host-stats" id="hostStats"></div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchHostTab('listings')">Mes logements</button>
+        <button class="tab" onclick="switchHostTab('bookings')">Réservations</button>
+      </div>
+      <div class="tab-content active" id="hostTabListings"></div>
+      <div class="tab-content" id="hostTabBookings"></div>
+    </div>
+  `
+  loadHostData()
+}
+
+async function loadHostData() {
+  try {
+    const [statsR, listingsR, bookingsR] = await Promise.all([
+      fetch(`${API}/api/host/stats`, { headers: { 'Authorization': `Bearer ${state.token}` } }),
+      fetch(`${API}/api/host/listings`, { headers: { 'Authorization': `Bearer ${state.token}` } }),
+      fetch(`${API}/api/host/bookings`, { headers: { 'Authorization': `Bearer ${state.token}` } })
+    ])
+    const stats = await safeJson(statsR)
+    if (!statsR.ok) throw new Error(stats.error || 'Erreur stats')
+    const listings = await safeJson(listingsR)
+    if (!listingsR.ok) throw new Error(listings.error || 'Erreur logements')
+    const bookings = await safeJson(bookingsR)
+    if (!bookingsR.ok) throw new Error(bookings.error || 'Erreur réservations')
+
+    document.getElementById('hostStats').innerHTML = `
+      <div class="stat-card"><div class="stat-value">${stats.listingCount}</div><div class="stat-label">Logements</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.pendingCount}</div><div class="stat-label">En attente</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.confirmedCount}</div><div class="stat-label">Confirmées</div></div>
+      <div class="stat-card"><div class="stat-value">${stats.totalRevenue}€</div><div class="stat-label">Revenus</div></div>
+    `
+    renderHostListings(listings)
+    renderHostBookings(bookings)
+  } catch (err) { toast(err.message, 'error') }
+}
+
+function switchHostTab(tab) {
+  hostTab = tab
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'))
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'))
+  event.target.classList.add('active')
+  document.getElementById(`hostTab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.add('active')
+}
+
+function renderHostListings(listings) {
+  const el = document.getElementById('hostTabListings')
+  if (!listings.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">&#127968;</div><h3>Aucun logement</h3><p>Publiez votre premier logement pour commencer.</p><button class="btn btn-primary" style="margin-top:12px" onclick="showListingEditor()">+ Publier un logement</button></div>`
+    return
+  }
+  el.innerHTML = `
+    <table class="host-table">
+      <thead><tr><th></th><th>Titre</th><th>Ville</th><th>Prix</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        ${listings.map(l => `
+          <tr>
+            <td><img class="thumb" src="${l.images?.[0]||'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=100&h=75&fit=crop'}"></td>
+            <td><strong>${l.title}</strong><br><span style="font-size:12px;color:var(--text-light)">${l.type}</span></td>
+            <td>${l.city}</td>
+            <td>${l.price}€ <span style="font-size:12px;color:var(--text-light)">/nuit</span></td>
+            <td><span class="status status-${l.active?'confirmed':'cancelled'}">${l.active?'Actif':'Inactif'}</span></td>
+            <td><div style="display:flex;gap:4px"><button class="btn btn-outline btn-sm" onclick="showListingEditor('${l.id}')">Modifier</button><button class="btn btn-danger btn-sm" onclick="deleteListing('${l.id}')">Supprimer</button></div></td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+function renderHostBookings(bookings) {
+  const el = document.getElementById('hostTabBookings')
+  if (!bookings.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">&#128197;</div><h3>Aucune réservation</h3><p>Les réservations de vos logements apparaîtront ici.</p></div>`
+    return
+  }
+  el.innerHTML = `
+    <table class="host-table">
+      <thead><tr><th></th><th>Logement</th><th>Voyageur</th><th>Dates</th><th>Total</th><th>Statut</th><th></th></tr></thead>
+      <tbody>
+        ${bookings.map(b => `
+          <tr>
+            <td><img class="thumb" src="${b.images||'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=100&h=75&fit=crop'}"></td>
+            <td><strong>${b.title}</strong></td>
+            <td>${b.guestName}<br><span style="font-size:12px;color:var(--text-light)">${b.guestEmail}</span></td>
+            <td>${formatDate(b.checkIn)} - ${formatDate(b.checkOut)}<br><span style="font-size:12px;color:var(--text-light)">${b.nights} nuits</span></td>
+            <td>${b.totalPrice}€</td>
+            <td><span class="status status-${b.status === 'en_attente' ? 'pending' : b.status}">${b.status === 'en_attente' ? 'En attente' : b.status.charAt(0).toUpperCase()+b.status.slice(1)}</span></td>
+            <td>
+              ${b.status === 'en_attente' ? `
+                <div style="display:flex;gap:4px">
+                  <button class="btn btn-success btn-sm" onclick="handleBookingStatus('${b.id}','confirmé')">✓</button>
+                  <button class="btn btn-danger btn-sm" onclick="handleBookingStatus('${b.id}','annulé')">✗</button>
+                </div>
+              ` : ''}
+              ${b.status === 'confirmé' ? `
+                <div style="display:flex;gap:4px">
+                  <button class="btn btn-outline btn-sm" onclick="handleBookingStatus('${b.id}','terminé')">Terminer</button>
+                  <button class="btn btn-danger btn-sm" onclick="handleBookingStatus('${b.id}','annulé')">Annuler</button>
+                </div>
+              ` : ''}
+              <div style="margin-top:${b.status === 'en_attente' || b.status === 'confirmé' ? '4px' : '0'}">
+                <button class="btn btn-ghost btn-sm" style="color:#ef4444;font-size:12px" onclick="deleteBooking('${b.id}')">Supprimer</button>
+              </div>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `
+}
+
+async function handleBookingStatus(bookingId, status) {
+  try {
+    const r = await fetch(`${API}/api/bookings/${bookingId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ status }) })
+    const d = await safeJson(r)
+    if (!r.ok) throw new Error(d.error || 'Erreur statut')
+    toast(d.message, 'success'); loadHostData()
+  } catch (err) { toast(err.message, 'error') }
+}
+
+async function cancelClientBooking(bookingId) {
+  try {
+    const r = await fetch(`${API}/api/bookings/${bookingId}/status`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ status: 'annulé' }) })
+    const d = await safeJson(r)
+    if (!r.ok) throw new Error(d.error || 'Erreur annulation')
+    closeModal(); toast(d.message, 'success')
+  } catch (err) { toast(err.message, 'error') }
+}
+
+async function deleteListing(id) {
+  if (!confirm('Supprimer ce logement définitivement ?')) return
+  try {
+    const r = await fetch(`${API}/api/listings/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${state.token}` } })
+    const d = await safeJson(r)
+    if (!r.ok) throw new Error(d.error || 'Erreur suppression')
+    toast(d.message, 'success'); loadHostData()
+  } catch (err) { toast(err.message, 'error') }
+}
+
+async function deleteBooking(id) {
+  if (!confirm('Supprimer cette réservation définitivement ?')) return
+  try {
+    const r = await fetch(`${API}/api/bookings/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${state.token}` } })
+    const d = await safeJson(r)
+    if (!r.ok) throw new Error(d.error || 'Erreur suppression')
+    toast(d.message, 'success'); loadHostData()
+  } catch (err) { toast(err.message, 'error') }
+}
+
+async function deleteClientBooking(id) {
+  if (!confirm('Supprimer cette réservation définitivement ?')) return
+  try {
+    const r = await fetch(`${API}/api/bookings/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${state.token}` } })
+    const d = await safeJson(r)
+    if (!r.ok) throw new Error(d.error || 'Erreur suppression')
+    closeModal(); toast(d.message, 'success')
+  } catch (err) { toast(err.message, 'error') }
+}
+
+/* ─── Listing Editor (Create/Edit) ─── */
+async function showListingEditor(id = null) {
+  let l = null
+  if (id) {
+    try {
+      const r = await fetch(`${API}/api/listings/${id}`)
+      if (r.ok) l = await safeJson(r)
+    } catch {}
+  }
+  const title = l ? 'Modifier le logement' : 'Nouveau logement'
+  const btnText = l ? 'Enregistrer' : 'Publier'
+
+  showModal(title, `
+    <form id="listingForm" onsubmit="handleListingSubmit(event, '${l?.id||''}')">
+      <div class="editor-grid">
+        <div class="full"><label>Titre *</label><input name="title" value="${l?.title||''}" required></div>
+        <div class="full"><label>Description</label><textarea name="description" rows="3">${l?.description||''}</textarea></div>
+        <div><label>Type *</label>
+          <select name="type" required>
+            ${['Appartement entier','Maison entière','Chambre privée','Chambre partagée','Loft','Villa','Chalet','Studio'].map(t =>
+              `<option ${l?.type===t?'selected':''}>${t}</option>`
+            ).join('')}
+          </select>
+        </div>
+        <div><label>Catégorie</label>
+          <select name="category">
+            ${[['ville','Ville'],['maisons','Maisons'],['sejour-nature','Séjour nature'],['montagne','Montagne'],['plage','Plage'],['camping','Camping'],['piscine','Piscine'],['vignobles','Vignobles'],['insolite','Insolite'],['arctique','Arctique']].map(([v,lab]) =>
+              `<option value="${v}" ${l?.category===v?'selected':''}>${lab}</option>`
+            ).join('')}
+          </select>
+        </div>
+        <div><label>Ville *</label><input name="city" value="${l?.city||''}" required></div>
+        <div><label>Pays</label><input name="country" value="${l?.country||'France'}"></div>
+        <div><label>Prix / nuit (€) *</label><input type="number" name="price" min="10" value="${l?.price||''}" required></div>
+        <div><label>Places max</label><input type="number" name="guests" min="1" max="20" value="${l?.guests||2}"></div>
+        <div><label>Chambres</label><input type="number" name="bedrooms" min="0" value="${l?.bedrooms||1}"></div>
+        <div><label>Lits</label><input type="number" name="beds" min="1" value="${l?.beds||1}"></div>
+        <div><label>Salles de bain</label><input type="number" name="baths" min="1" value="${l?.baths||1}"></div>
+        <div class="full"><label>Images</label>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input type="file" accept="image/*" multiple id="imageInput" style="flex:1;padding:8px;border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--bg)">
+            <button type="button" class="btn btn-primary btn-sm" onclick="uploadImages()">&#128247; Upload</button>
+          </div>
+          <div id="uploadProgress" style="font-size:13px;color:var(--text-light);margin-bottom:8px;display:none"></div>
+          <textarea name="images" rows="2" id="imageUrls" style="display:none">${l?.images?.join(',\n')||''}</textarea>
+          <div class="image-previews" id="imagePreviews">${l?.images?.length ? l.images.slice(0,6).map(i => `<img src="${i}" onclick="removeImageByUrl('${i}')">`).join('') : ''}</div>
+          <div style="font-size:12px;color:var(--text-light);margin-top:4px">Cliquez sur une image pour la supprimer</div>
+        </div>
+        <div class="full"><label>Équipements (séparés par des virgules)</label>
+          <input name="amenities" value="${l?.amenities?.join(', ')||''}">
+        </div>
+        <div class="full"><label>Coordonnées (lat, lng)</label>
+          <div style="display:flex;gap:8px">
+            <input name="lat" placeholder="Latitude" value="${l?.lat||''}" style="flex:1">
+            <input name="lng" placeholder="Longitude" value="${l?.lng||''}" style="flex:1">
+          </div>
+        </div>
+      </div>
+    </form>
+  `, `<button class="btn btn-outline" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="document.getElementById('listingForm').requestSubmit()">${btnText}</button>`, true)
+}
+
+async function handleListingSubmit(e, id) {
+  e.preventDefault()
+  const fd = new FormData(e.target)
+  const body = {
+    title: fd.get('title'), description: fd.get('description'),
+    type: fd.get('type'), category: fd.get('category'),
+    city: fd.get('city'), country: fd.get('country'),
+    price: Number(fd.get('price')), guests: Number(fd.get('guests')),
+    bedrooms: Number(fd.get('bedrooms')), beds: Number(fd.get('beds')), baths: Number(fd.get('baths')),
+    images: fd.get('images').split(/[\n,]+/).map(s => s.trim()).filter(Boolean),
+    amenities: fd.get('amenities').split(',').map(s => s.trim()).filter(Boolean),
+    lat: fd.get('lat') ? Number(fd.get('lat')) : null,
+    lng: fd.get('lng') ? Number(fd.get('lng')) : null
+  }
+  try {
+    const method = id ? 'PUT' : 'POST'
+    const url = id ? `${API}/api/listings/${id}` : `${API}/api/listings`
+    const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify(body) })
+    const d = await safeJson(r)
+    if (!r.ok) throw new Error(d.error || 'Erreur enregistrement')
+    toast(d.message, 'success'); closeModal(); loadHostData()
+  } catch (err) { toast(err.message, 'error') }
+}
+
+/* ─── Image Upload ─── */
+let uploadedUrls = []
+
+async function uploadImages() {
+  const input = document.getElementById('imageInput')
+  if (!input.files.length) { toast('Sélectionnez des images', 'error'); return }
+  const progress = document.getElementById('uploadProgress')
+  progress.style.display = 'block'
+  const total = input.files.length
+  const urls = []
+  for (let i = 0; i < total; i++) {
+    progress.textContent = `Upload ${i+1}/${total}...`
+    const formData = new FormData()
+    formData.append('image', input.files[i])
+    try {
+      const r = await fetch(`${API}/api/upload`, { method: 'POST', headers: { 'Authorization': `Bearer ${state.token}` }, body: formData })
+      const d = await safeJson(r)
+      if (!r.ok) throw new Error(d.error || 'Erreur upload')
+      urls.push(d.url)
+    } catch (err) { toast(`Erreur image ${i+1}: ${err.message}`, 'error') }
+  }
+  progress.textContent = `${urls.length} image(s) uploadée(s) !`
+  setTimeout(() => { progress.style.display = 'none' }, 2000)
+  uploadedUrls = [...uploadedUrls, ...urls]
+  const textarea = document.getElementById('imageUrls')
+  const existing = textarea.value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
+  const all = [...existing, ...urls]
+  textarea.value = all.join(',\n')
+  renderImagePreviews(all)
+  input.value = ''
+}
+
+function renderImagePreviews(urls) {
+  const container = document.getElementById('imagePreviews')
+  container.innerHTML = urls.map(u => `<img src="${u}" onclick="removeImageByUrl('${u}')">`).join('')
+}
+
+function removeImageByUrl(url) {
+  const textarea = document.getElementById('imageUrls')
+  let urls = textarea.value.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
+  urls = urls.filter(u => u !== url)
+  textarea.value = urls.join(',\n')
+  uploadedUrls = uploadedUrls.filter(u => u !== url)
+  renderImagePreviews(urls)
+}
+
+/* ─── Profile ─── */
+async function showProfile() {
+  closeDropdown()
+  if (!state.user) { showAuth(); return }
+  try {
+    const r = await fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${state.token}` } })
+    const u = await safeJson(r)
+    if (!r.ok) throw new Error(u.error || 'Erreur profil')
+    showModal('Mon profil', `
+      <div class="profile-info">
+        <div class="field"><label>Nom</label><p>${u.name}</p></div>
+        <div class="field"><label>Email</label><p>${u.email}</p></div>
+        <div class="field"><label>Email vérifié</label><p>${u.verified ? '✅ Oui' : '❌ Non'}</p></div>
+        <div class="field"><label>Statut</label><p>${u.isHost ? '🏡 Hôte' : '👤 Voyageur'}</p></div>
+        ${u.hostSince ? `<div class="field"><label>Hôte depuis</label><p>${formatDate(u.hostSince)}</p></div>` : ''}
+        ${u.phone ? `<div class="field"><label>Téléphone</label><p>${u.phone}</p></div>` : ''}
+      </div>
+    `, '')
+  } catch { showModal('Mon profil', '<div class="profile-info"><div class="field"><label>Nom</label><p>...</p></div></div>', '') }
+}
+
+/* ─── My Bookings ─── */
+async function showMyBookings() {
+  closeDropdown()
+  if (!state.user) { showAuth(); return }
+  try {
+    const r = await fetch(`${API}/api/bookings`, { headers: { 'Authorization': `Bearer ${state.token}` } })
+    const bookings = await safeJson(r)
+    if (!r.ok) throw new Error(bookings.error || 'Erreur réservations')
+    showModal('Mes réservations', bookings.length ? `
+      <div style="display:flex;flex-direction:column;gap:12px">
+        ${bookings.map(b => `
+          <div style="display:flex;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm)">
+            <img src="${b.images||'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=100&h=75&fit=crop'}" style="width:80px;height:60px;border-radius:6px;object-fit:cover;flex-shrink:0">
+            <div style="flex:1">
+              <strong>${b.title}</strong>
+              <div style="font-size:13px;color:var(--text-light)">${b.city} · Hôte : ${b.hostName}</div>
+              <div style="font-size:13px">${formatDate(b.checkIn)} - ${formatDate(b.checkOut)} · ${b.nights} nuits</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+                <span style="font-weight:600">${b.totalPrice}€</span>
+                <span class="status status-${b.status === 'en_attente' ? 'pending' : b.status}">${b.status === 'en_attente' ? 'En attente' : b.status.charAt(0).toUpperCase()+b.status.slice(1)}</span>
+              </div>
+              ${b.status === 'en_attente' || b.status === 'confirmé' ? `
+                <div style="margin-top:8px;display:flex;gap:4px">
+                  <button class="btn btn-danger btn-sm" onclick="cancelClientBooking('${b.id}')">Annuler</button>
+                  <button class="btn btn-ghost btn-sm" style="color:#ef4444;font-size:12px;border:1px solid #fee2e2" onclick="deleteClientBooking('${b.id}')">Supprimer</button>
+                </div>
+              ` : `
+                <div style="margin-top:8px">
+                  <button class="btn btn-ghost btn-sm" style="color:#ef4444;font-size:12px;border:1px solid #fee2e2" onclick="deleteClientBooking('${b.id}')">Supprimer</button>
+                </div>
+              `}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    ` : '<div class="empty-state"><div class="empty-icon">&#128197;</div><h3>Aucune réservation</h3><p>Vous n\'avez pas encore réservé de logement.</p></div>', '')
+  } catch (err) { toast(err.message, 'error') }
+}
+
+/* ─── Init ─── */
+loadAuth()
+loadListings()
+loadCategories()
+</script>
+</body>
+</html>
