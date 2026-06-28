@@ -1,0 +1,21 @@
+{
+  "name": "ai-agent-marketplace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npx vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.39",
+    "vue-router": "^5.1.0",
+    "firebase": "^12.15.0",
+    "date-fns": "^4.4.0"
+  },
+  "devDependencies": {
+    "vite": "^8.1.0",
+    "@vitejs/plugin-vue": "^6.0.7"
+  }
+}
