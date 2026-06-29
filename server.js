@@ -27,9 +27,10 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.static(path.join(__dirname, 'public')))
 
 /* ─── PostgreSQL connection ─── */
+const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:Mohamedalizrelli.190@db.hkxybruywbkpqisrtuww.supabase.co:5432/postgres'
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
+  connectionString: DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 })
 
 function q(sql) {
