@@ -73,17 +73,28 @@ function formatListing(l) {
 
 /* ─── Auth ─── */
 app.post('/api/auth/signup', async (req, res) => {
+  const { name, email, password, confirmPassword } = req.body
+  if (!name || !email || !password) return res.status(400).json({ error: 'Champs requis' })
+  if (password !== confirmPassword) return res.status(400).json({ error: 'Les mots de passe ne correspondent pas' })
+  if (password.length < 4) return res.status(400).json({ error: 'Mot de passe trop court (min 4 caractères)' })
   try {
-    const { name, email, password, confirmPassword } = req.body
-    if (!name || !email || !password) return res.status(400).json({ error: 'Champs requis' })
-    if (password !== confirmPassword) return res.status(400).json({ error: 'Les mots de passe ne correspondent pas' })
-    if (password.length < 4) return res.status(400).json({ error: 'Mot de passe trop court (min 4 caractères)' })
     const existing = await queryOne('SELECT id FROM users WHERE email = ?', [email])
     if (existing) return res.status(409).json({ error: 'Email déjà utilisé' })
     const id = uuidv4()
     const token = jwt.sign({ id, name, email, isHost:0, verified:1 }, JWT_SECRET, { expiresIn:'7d' })
-    return res.json({ token, user:{ id, name, email, isHost:0, verified:1 }, message: 'Compte créé avec succès !' })
+    await run('INSERT INTO users (id,name,email,password,verified) VALUES (?,?,?,?,1)', [id, name, email, bcrypt.hashSync(password, 10)])
+    res.json({ token, user:{ id, name, email, isHost:0, verified:1 }, message: 'Compte créé avec succès !' })
+    mail.sendWelcomeEmail(email, name).catch(e => console.error('Mail error:', e.message))
   } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+app.post('/api/test-signup', async (req, res) => {
+  const { name, email, password } = req.body
+  if (!name || !email || !password) return res.status(400).json({ error: 'Champs requis' })
+  const id = uuidv4()
+  const token = jwt.sign({ id, name, email, isHost:0, verified:1 }, JWT_SECRET, { expiresIn:'7d' })
+  await run('INSERT INTO users (id,name,email,password,verified) VALUES (?,?,?,?,1)', [id, name, email, bcrypt.hashSync(password, 10)])
+  res.json({ token, user:{ id, name, email, isHost:0, verified:1 }, message: 'OK' })
 })
 
 app.post('/api/auth/login', async (req, res) => {
