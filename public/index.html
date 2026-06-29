@@ -119,6 +119,7 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:all .25s;padding:20px}
 .modal-overlay.open{opacity:1;visibility:visible}
 .modal{background:#fff;border-radius:16px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;transform:translateY(20px) scale(.97);transition:transform .3s cubic-bezier(.25,.46,.45,.94);position:relative}
+.modal-wide{max-width:900px}
 .modal-overlay.open .modal{transform:translateY(0) scale(1)}
 .modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:1}
 .modal-header h3{font-size:18px;font-weight:600}
@@ -126,7 +127,6 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
 .modal-close{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s}
 .modal-close:hover{background:var(--bg)}
-.modal-wide{max-width:900px}
 
 /* ─── Listing detail ─── */
 .detail-gallery{display:grid;grid-template-columns:2fr 1fr;gap:4px;border-radius:var(--radius);overflow:hidden;margin-bottom:20px}
@@ -183,9 +183,37 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 .editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .editor-grid .full{grid-column:1/-1}
 .editor-grid label{font-weight:500;font-size:13px;margin-bottom:4px;display:block}
-.image-previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.image-previews img{width:80px;height:60px;border-radius:6px;object-fit:cover;cursor:pointer}
-.image-previews img:hover{opacity:.7}
+.editor-grid input,.editor-grid select,.editor-grid textarea{transition:border-color .2s,box-shadow .2s}
+.editor-grid input:focus,.editor-grid select:focus,.editor-grid textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(255,56,92,.1)}
+.editor-section-title{font-size:15px;font-weight:600;margin-bottom:8px;margin-top:4px;color:var(--text)}
+.room-config{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px}
+.room-config label{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s;background:var(--bg);font-size:13px;font-weight:500}
+.room-config label:hover{border-color:var(--primary)}
+.room-config label .config-icon{font-size:22px}
+.room-config input{width:60px;text-align:center;border:1px solid var(--border);border-radius:6px;padding:6px;font-size:14px;margin-top:2px}
+.room-config input:focus{border-color:var(--primary);outline:none}
+
+/* ─── Upload zone ─── */
+.upload-zone{border:2px dashed #ddd;border-radius:12px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);position:relative}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--primary);background:#fff5f6}
+.upload-zone .upload-icon{font-size:40px;display:block;margin-bottom:8px}
+.upload-zone .upload-text{font-size:15px;font-weight:600;color:var(--text)}
+.upload-zone .upload-sub{font-size:13px;color:var(--text-light);margin-top:4px}
+.upload-zone input[type=file]{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.upload-bar{display:flex;gap:8px;margin-top:12px;align-items:center}
+.upload-bar .file-count{font-size:13px;color:var(--text-light);flex:1}
+.image-previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.image-previews .preview-item{position:relative;width:96px;height:72px;border-radius:8px;overflow:hidden;border:2px solid var(--border);transition:all .2s}
+.image-previews .preview-item:hover{border-color:var(--primary)}
+.image-previews .preview-item img{width:100%;height:100%;object-fit:cover;display:block}
+.image-previews .preview-item .remove-btn{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .2s}
+.image-previews .preview-item:hover .remove-btn{opacity:1}
+
+/* ─── Amenity pills ─── */
+.amenity-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;margin-bottom:6px}
+.amenity-pill{padding:8px 16px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;transition:all .2s;background:#fff;color:var(--text-light);user-select:none}
+.amenity-pill:hover{border-color:var(--primary);color:var(--primary)}
+.amenity-pill.selected{background:var(--primary);border-color:var(--primary);color:#fff}
 
 /* ─── Profile ─── */
 .profile-info{padding:20px 0}
@@ -206,6 +234,8 @@ main{max-width:1440px;margin:0 auto;padding:24px}
   .detail-gallery .grid-2{display:none}
   .host-stats{grid-template-columns:repeat(2,1fr)}
   .editor-grid{grid-template-columns:1fr}
+  .room-config{grid-template-columns:repeat(2,1fr)}
+  .modal-wide{max-width:100%}
   .modal{max-width:100%;border-radius:12px 12px 0 0;max-height:95vh;margin-top:auto}
   .modal-overlay{align-items:flex-end}
   .host-table{font-size:12px}
@@ -521,6 +551,7 @@ function sortListings(sort) {
 
 async function loadListings() {
   const grid = document.getElementById('listingsGrid')
+  if (!grid) return
   grid.innerHTML = Array(8).fill(0).map(() =>
     `<div class="listing-card skeleton-card"><div class="skeleton-img skeleton"></div><div class="card-body"><div class="skeleton-line skeleton"></div><div class="skeleton-line skeleton"></div></div></div>`
   ).join('')
@@ -529,7 +560,10 @@ async function loadListings() {
     if (state.currentCategory) params.set('category', state.currentCategory)
     if (state.currentSearch) params.set('search', state.currentSearch)
     const r = await fetch(`${API}/api/listings?${params}`)
-    const listings = await safeJson(r)
+    const data = await safeJson(r)
+    if (!r.ok) throw new Error(data.error || 'Erreur chargement')
+    if (!Array.isArray(data)) throw new Error('Réponse invalide du serveur')
+    const listings = data
     state.listings = listings
     if (!listings.length) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--text-light)">Aucun logement trouvé</div>'; return }
     grid.innerHTML = listings.map(l => `
@@ -699,14 +733,16 @@ function renderHostListings(listings) {
   }
   el.innerHTML = `
     <table class="host-table">
-      <thead><tr><th></th><th>Titre</th><th>Ville</th><th>Prix</th><th>Statut</th><th></th></tr></thead>
+      <thead><tr><th></th><th>Titre</th><th>Ville</th><th>Capacité</th><th>Prix</th><th>Réserv.</th><th>Statut</th><th></th></tr></thead>
       <tbody>
         ${listings.map(l => `
           <tr>
             <td><img class="thumb" src="${l.images?.[0]||'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=100&h=75&fit=crop'}"></td>
-            <td><strong>${l.title}</strong><br><span style="font-size:12px;color:var(--text-light)">${l.type}</span></td>
+            <td><strong>${l.title}</strong><br><span style="font-size:12px;color:var(--text-light)">${l.type} · ${l.category||''}</span></td>
             <td>${l.city}</td>
-            <td>${l.price}€ <span style="font-size:12px;color:var(--text-light)">/nuit</span></td>
+            <td style="font-size:13px;white-space:nowrap">&#128101; ${l.guests} · &#128716; ${l.bedrooms}</td>
+            <td><strong>${l.price}€</strong> <span style="font-size:12px;color:var(--text-light)">/nuit</span></td>
+            <td>${l.bookingCount||0}</td>
             <td><span class="status status-${l.active?'confirmed':'cancelled'}">${l.active?'Actif':'Inactif'}</span></td>
             <td><div style="display:flex;gap:4px">
               <button class="btn btn-outline btn-sm" onclick="showListingEditor('${l.id}')">Modifier</button>
@@ -831,11 +867,43 @@ async function showListingEditor(id = null) {
   const title = l ? 'Modifier le logement' : 'Nouveau logement'
   const btnText = l ? 'Enregistrer' : 'Publier'
 
+  const defaultAmenities = ['WiFi','Cuisine','Parking','Climatisation','Chauffage','Machine à laver','Sèche-cheveux','Fer à repasser','TV','Eau chaude','Petit-déjeuner','Animaux acceptés','Jardin','Balcon','Piscine','Jacuzzi','Sauna','Salle de sport','Cheminée','Espace de travail','Lave-vaisselle','Micro-ondes','Réfrigérateur','Cafetière','Grille-pain']
+  const selectedAmenities = l?.amenities || []
+  const amenityHtml = defaultAmenities.map(a =>
+    `<span class="amenity-pill ${selectedAmenities.includes(a)?'selected':''}" onclick="toggleAmenity(this)">${a}</span>`
+  ).join('')
+
+  const imgUrls = l?.images?.join(',\n')||''
+  const previewHtml = l?.images?.length ? l.images.map(i =>
+    `<div class="preview-item"><img src="${i}"><button type="button" class="remove-btn" onclick="removeImageByUrl('${i}')">&times;</button></div>`
+  ).join('') : ''
+
   showModal(title, `
     <form id="listingForm" onsubmit="handleListingSubmit(event, '${l?.id||''}')">
       <div class="editor-grid">
-        <div class="full"><label>Titre *</label><input name="title" value="${l?.title||''}" required></div>
-        <div class="full"><label>Description</label><textarea name="description" rows="3">${l?.description||''}</textarea></div>
+
+        <div class="full"><div class="editor-section-title">Photos</div></div>
+        <div class="full">
+          <div class="upload-zone" id="uploadZone">
+            <span class="upload-icon">&#128247;</span>
+            <div class="upload-text">Ajoutez des photos</div>
+            <div class="upload-sub">Cliquez pour sélectionner ou glissez-déposez</div>
+            <input type="file" accept="image/*" multiple id="imageInput">
+          </div>
+          <div class="upload-bar" id="uploadBar" style="${l?.images?.length ? '' : 'display:none'}">
+            <span class="file-count" id="fileCount">${l?.images?.length||0} fichier(s) sélectionné(s)</span>
+            <button type="button" class="btn btn-primary btn-sm" onclick="uploadImages()">&#8593; Upload</button>
+          </div>
+          <div id="uploadProgress" style="font-size:13px;color:var(--text-light);margin-top:8px;display:none"></div>
+          <textarea name="images" rows="2" id="imageUrls" style="display:none">${imgUrls}</textarea>
+          <div class="image-previews" id="imagePreviews">${previewHtml}</div>
+        </div>
+
+        <div class="full"><div class="editor-section-title">À propos de votre logement</div></div>
+        <div class="full"><label>Titre *</label><input name="title" value="${l?.title||''}" required placeholder="ex : Charmant studio au cœur de Paris"></div>
+        <div class="full"><label>Description</label><textarea name="description" rows="3" placeholder="Décrivez l'ambiance, le quartier, les points forts...">${l?.description||''}</textarea></div>
+
+        <div class="full"><div class="editor-section-title">Type de logement</div></div>
         <div><label>Type *</label>
           <select name="type" required>
             ${['Appartement entier','Maison entière','Chambre privée','Chambre partagée','Loft','Villa','Chalet','Studio'].map(t =>
@@ -850,35 +918,43 @@ async function showListingEditor(id = null) {
             ).join('')}
           </select>
         </div>
-        <div><label>Ville *</label><input name="city" value="${l?.city||''}" required></div>
+
+        <div class="full"><div class="editor-section-title">Où se trouve votre logement ?</div></div>
+        <div><label>Ville *</label><input name="city" value="${l?.city||''}" required placeholder="ex: Paris"></div>
         <div><label>Pays</label><input name="country" value="${l?.country||'France'}"></div>
-        <div><label>Prix / nuit (€) *</label><input type="number" name="price" min="10" value="${l?.price||''}" required></div>
-        <div><label>Places max</label><input type="number" name="guests" min="1" max="20" value="${l?.guests||2}"></div>
-        <div><label>Chambres</label><input type="number" name="bedrooms" min="0" value="${l?.bedrooms||1}"></div>
-        <div><label>Lits</label><input type="number" name="beds" min="1" value="${l?.beds||1}"></div>
-        <div><label>Salles de bain</label><input type="number" name="baths" min="1" value="${l?.baths||1}"></div>
-        <div class="full"><label>Images</label>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <input type="file" accept="image/*" multiple id="imageInput" style="flex:1;padding:8px;border:1px dashed var(--border);border-radius:var(--radius-sm);background:var(--bg)">
-            <button type="button" class="btn btn-primary btn-sm" onclick="uploadImages()">&#128247; Upload</button>
-          </div>
-          <div id="uploadProgress" style="font-size:13px;color:var(--text-light);margin-bottom:8px;display:none"></div>
-          <textarea name="images" rows="2" id="imageUrls" style="display:none">${l?.images?.join(',\n')||''}</textarea>
-          <div class="image-previews" id="imagePreviews">${l?.images?.length ? l.images.slice(0,6).map(i => `<img src="${i}" onclick="removeImageByUrl('${i}')">`).join('') : ''}</div>
-          <div style="font-size:12px;color:var(--text-light);margin-top:4px">Cliquez sur une image pour la supprimer</div>
-        </div>
-        <div class="full"><label>Équipements (séparés par des virgules)</label>
-          <input name="amenities" value="${l?.amenities?.join(', ')||''}">
-        </div>
         <div class="full"><label>Coordonnées (lat, lng)</label>
           <div style="display:flex;gap:8px">
             <input name="lat" placeholder="Latitude" value="${l?.lat||''}" style="flex:1">
             <input name="lng" placeholder="Longitude" value="${l?.lng||''}" style="flex:1">
           </div>
         </div>
+
+        <div class="full"><div class="editor-section-title">Capacité et pièces</div></div>
+        <div class="full room-config">
+          <label><span class="config-icon">&#128101;</span> Voyageurs max <input type="number" name="guests" min="1" max="20" value="${l?.guests||2}"></label>
+          <label><span class="config-icon">&#128716;</span> Chambres <input type="number" name="bedrooms" min="0" value="${l?.bedrooms||1}"></label>
+          <label><span class="config-icon">&#128719;</span> Lits <input type="number" name="beds" min="1" value="${l?.beds||1}"></label>
+          <label><span class="config-icon">&#128703;</span> Salles de bain <input type="number" name="baths" min="1" value="${l?.baths||1}"></label>
+        </div>
+
+        <div class="full"><div class="editor-section-title">Tarif</div></div>
+        <div><label>Prix / nuit (€) *</label><input type="number" name="price" min="10" value="${l?.price||''}" required placeholder="ex: 90"></div>
+
+        <div class="full"><div class="editor-section-title">Équipements</div></div>
+        <div class="full">
+          <div class="amenity-pills" id="amenityPills">${amenityHtml}</div>
+          <textarea name="amenities" id="amenityInput" style="display:none">${l?.amenities?.join(', ')||''}</textarea>
+        </div>
       </div>
     </form>
-  `, `<button class="btn btn-outline" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="document.getElementById('listingForm').requestSubmit()">${btnText}</button>`, true)
+  `, `<button class="btn btn-outline" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="document.getElementById('listingForm').requestSubmit()">${btnText}</button>`, true, true)
+}
+
+function toggleAmenity(el) {
+  el.classList.toggle('selected')
+  const pills = document.querySelectorAll('#amenityPills .amenity-pill.selected')
+  const vals = Array.from(pills).map(p => p.textContent)
+  document.getElementById('amenityInput').value = vals.join(', ')
 }
 
 async function handleListingSubmit(e, id) {
@@ -891,7 +967,7 @@ async function handleListingSubmit(e, id) {
     price: Number(fd.get('price')), guests: Number(fd.get('guests')),
     bedrooms: Number(fd.get('bedrooms')), beds: Number(fd.get('beds')), baths: Number(fd.get('baths')),
     images: fd.get('images').split(/[\n,]+/).map(s => s.trim()).filter(Boolean),
-    amenities: fd.get('amenities').split(',').map(s => s.trim()).filter(Boolean),
+    amenities: fd.get('amenities').split(/,\s*/).map(s => s.trim()).filter(Boolean),
     lat: fd.get('lat') ? Number(fd.get('lat')) : null,
     lng: fd.get('lng') ? Number(fd.get('lng')) : null
   }
@@ -907,6 +983,33 @@ async function handleListingSubmit(e, id) {
 
 /* ─── Image Upload ─── */
 let uploadedUrls = []
+
+document.addEventListener('change', function(e) {
+  if (e.target.id === 'imageInput') {
+    const count = e.target.files.length
+    document.getElementById('fileCount').textContent = count + ' fichier(s) sélectionné(s)'
+    document.getElementById('uploadBar').style.display = count ? '' : 'none'
+  }
+})
+
+document.addEventListener('dragover', function(e) {
+  const zone = e.target.closest('.upload-zone')
+  if (zone) { e.preventDefault(); zone.classList.add('dragover') }
+})
+document.addEventListener('dragleave', function(e) {
+  const zone = e.target.closest('.upload-zone')
+  if (zone) { e.preventDefault(); zone.classList.remove('dragover') }
+})
+document.addEventListener('drop', function(e) {
+  const zone = e.target.closest('.upload-zone')
+  if (zone) {
+    e.preventDefault(); zone.classList.remove('dragover')
+    const input = document.getElementById('imageInput')
+    input.files = e.dataTransfer.files
+    const event = new Event('change', { bubbles: true })
+    input.dispatchEvent(event)
+  }
+})
 
 async function uploadImages() {
   const input = document.getElementById('imageInput')
@@ -935,11 +1038,15 @@ async function uploadImages() {
   textarea.value = all.join(',\n')
   renderImagePreviews(all)
   input.value = ''
+  document.getElementById('fileCount').textContent = '0 fichier(s) sélectionné(s)'
+  document.getElementById('uploadBar').style.display = 'none'
 }
 
 function renderImagePreviews(urls) {
   const container = document.getElementById('imagePreviews')
-  container.innerHTML = urls.map(u => `<img src="${u}" onclick="removeImageByUrl('${u}')">`).join('')
+  container.innerHTML = urls.map(u =>
+    `<div class="preview-item"><img src="${u}"><button type="button" class="remove-btn" onclick="removeImageByUrl('${u}')">&times;</button></div>`
+  ).join('')
 }
 
 function removeImageByUrl(url) {

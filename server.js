@@ -97,25 +97,7 @@ async function initDb() {
     );
   `)
 
-  const userCount = queryOne('SELECT COUNT(*) as c FROM users')
-  if (!userCount || userCount.c === 0) { seedHosts(); console.log('✓ Database ready — no fake listings (hosts create their own)') }
-}
-
-/* ─── Seeded host accounts ─── */
-function seedHosts() {
-  const hostPw = bcrypt.hashSync('password123', 10)
-  const hosts = [
-    { name:'Marie Dupont', email:'marie@example.com' },
-    { name:'Jean Martin', email:'jean@example.com' },
-    { name:'Sophie Bernard', email:'sophie@example.com' },
-    { name:'Pierre Dubois', email:'pierre@example.com' },
-    { name:'Camille Petit', email:'camille@example.com' },
-    { name:'Lucas Moreau', email:'lucas@example.com' },
-  ]
-  hosts.forEach(h => run('INSERT OR IGNORE INTO users (id,name,email,password,isHost,hostSince,verified) VALUES (?,?,?,?,?,datetime("now"),1)', [uuidv4(), h.name, h.email, hostPw]))
-  const guestId = uuidv4()
-  run('INSERT OR IGNORE INTO users (id,name,email,password,verified) VALUES (?,?,?,?,1)', [guestId,'Test Guest','guest@example.com',hostPw])
-  console.log('✓ Host accounts ready (marie@example.com / password123)')
+  console.log('✓ Database ready')
 }
 
 function auth(req, res, next) {
@@ -244,7 +226,7 @@ app.get('/api/categories', (req, res) => {
 
 /* ─── Host Listings CRUD ─── */
 app.get('/api/host/listings', auth, (req, res) => {
-  const rows = query('SELECT * FROM listings WHERE hostId = ? ORDER BY createdAt DESC', [req.user.id])
+  const rows = query(`SELECT l.*, (SELECT COUNT(*) FROM bookings WHERE listingId = l.id) as bookingCount FROM listings l WHERE l.hostId = ? ORDER BY l.createdAt DESC`, [req.user.id])
   res.json(rows.map(formatListing))
 })
 
@@ -256,8 +238,8 @@ app.post('/api/listings', auth, (req, res) => {
     const id = uuidv4()
     const imgStr = Array.isArray(images) ? images.join('|') : (images || '')
     const amenStr = Array.isArray(amenities) ? amenities.join(', ') : (amenities || '')
-    run('INSERT INTO listings (id,hostId,title,description,type,category,city,country,price,images,guests,bedrooms,beds,baths,amenities,lat,lng) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-      [id, req.user.id, title, description || '', type, category || 'ville', city, country || 'France', Number(price), imgStr, Number(guests)||2, Number(bedrooms)||1, Number(beds)||1, Number(baths)||1, amenStr, lat||null, lng||null])
+    run('INSERT INTO listings (id,hostId,title,description,type,category,city,country,price,images,guests,bedrooms,beds,baths,amenities,lat,lng,active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+      [id, req.user.id, title, description || '', type, category || 'ville', city, country || 'France', Number(price), imgStr, Number(guests)||2, Number(bedrooms)||1, Number(beds)||1, Number(baths)||1, amenStr, lat||null, lng||null, 1])
     res.json({ id, message: 'Logement créé !' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
