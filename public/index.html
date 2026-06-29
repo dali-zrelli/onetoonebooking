@@ -506,7 +506,18 @@ document.getElementById('modalOverlay').addEventListener('click', e => { if (e.t
 /* ─── Home ─── */
 function home() {
   state.currentCategory = null; state.currentSearch = ''
-  document.getElementById('sectionTitle').textContent = 'Logements populaires'
+  const main = document.getElementById('main')
+  main.innerHTML = `
+    <div class="section-header">
+      <h2 id="sectionTitle">Logements populaires</h2>
+      <div class="filter-bar" id="filterBar">
+        <button class="btn btn-outline btn-sm" onclick="sortListings('rating')">&#9733; Mieux notés</button>
+        <button class="btn btn-outline btn-sm" onclick="sortListings('price')">&#36; Prix croissant</button>
+        <button class="btn btn-outline btn-sm" onclick="sortListings('newest')">&#128197; Plus récents</button>
+      </div>
+    </div>
+    <div class="listings-grid" id="listingsGrid"></div>
+  `
   loadListings(); loadCategories()
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'))
 }
