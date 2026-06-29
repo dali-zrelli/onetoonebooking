@@ -98,125 +98,24 @@ async function initDb() {
   `)
 
   const userCount = queryOne('SELECT COUNT(*) as c FROM users')
-  if (!userCount || userCount.c === 0) seedData()
+  if (!userCount || userCount.c === 0) { seedHosts(); console.log('✓ Database ready — no fake listings (hosts create their own)') }
 }
 
-function seedData() {
-  const cities = [
-    {city:'Paris',lat:48.8566,lng:2.3522,cat:'ville',zip:'75001',districts:['Le Marais','Montmartre','Saint-Germain','Bastille','Champs-Élysées','Latin Quarter','Opéra','Belleville']},
-    {city:'Lyon',lat:45.7640,lng:4.8357,cat:'ville',zip:'69001',districts:['Presqu\'île','Vieux Lyon','Croix-Rousse','Part-Dieu','Confluence','Brotteaux']},
-    {city:'Marseille',lat:43.2965,lng:5.3698,cat:'plage',zip:'13001',districts:['Vieux-Port','Le Panier','Corniche','Endoume','Callelongue','Prado']},
-    {city:'Bordeaux',lat:44.8378,lng:-0.5792,cat:'vignobles',zip:'33000',districts:['Centre','Chartrons','Saint-Pierre','Saint-Michel','Nansouty','Bastide']},
-    {city:'Nice',lat:43.7102,lng:7.2620,cat:'plage',zip:'06000',districts:['Promenade','Vieux Nice','Cimiez','Port','Fabron','Gambetta']},
-    {city:'Toulouse',lat:43.6047,lng:1.4442,cat:'ville',zip:'31000',districts:['Capitole','Carmes','Saint-Cyprien','Compans','Minimes','Jardin des Plantes']},
-    {city:'Lille',lat:50.6292,lng:3.0573,cat:'ville',zip:'59000',districts:['Vieux Lille','Centre','Wazemmes','Vauban','Euralille','Bois Blancs']},
-    {city:'Strasbourg',lat:48.5734,lng:7.7521,cat:'ville',zip:'67000',districts:['Petite France','Orangerie','Centre','Kronebourg','Gare','Esplanade']},
-    {city:'Nantes',lat:47.2184,lng:-1.5536,cat:'sejour-nature',zip:'44000',districts:['Centre','Île de Nantes','Trentemoult','Zola','Saint-Félix','Ducs']},
-    {city:'Montpellier',lat:43.6108,lng:3.8767,cat:'ville',zip:'34000',districts:['Écusson','Port Marianne','Antigone','Boutonnet','Près d\'Arènes','Celles']},
-  ]
-
-  const types = ['Appartement entier','Maison entière','Chambre privée','Chambre partagée','Loft','Villa','Chalet','Studio']
-  const categories = ['maisons','sejour-nature','montagne','plage','ville','camping','piscine','vignobles','insolite','arctique']
-
-  const catImages = {
-    maisons:['https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&h=600&fit=crop'],
-    'sejour-nature':['https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1510798831971-66131304d942?w=800&h=600&fit=crop'],
-    montagne:['https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1503785640985-f62e3aeee448?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1551698618-1dfe5facc08b?w=800&h=600&fit=crop'],
-    plage:['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1519046904884-53103b34b1b7?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1533104816931-20fa691ff6ca?w=800&h=600&fit=crop'],
-    ville:['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop'],
-    camping:['https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1487730116645-74489c95b41b?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1525811902-f2342640856e?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1508873696983-2dfd5898f08b?w=800&h=600&fit=crop'],
-    piscine:['https://images.unsplash.com/photo-1575429198097-0414ec08e8cd?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1560518883-b1e9c1104c26?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1600566753086-00f18f6b0252?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1600585154955-13c8bee2b082?w=800&h=600&fit=crop'],
-    vignobles:['https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1548550023-79ce344fdf3e?w=800&h=600&fit=crop'],
-    insolite:['https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1568682125448-6b3f43e9a27b?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1599809275671-b5942cabc7a2?w=800&h=600&fit=crop'],
-    arctique:['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1516633636389-59decfbb3162?w=800&h=600&fit=crop','https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=800&h=600&fit=crop'],
-  }
-
-  const amenities = ['WiFi','Cuisine','Parking','Piscine','Climatisation','Chauffage','Lave-linge','Sèche-linge','TV','Fer à repasser','Espace de travail','Balcon','Jardin','Terrasse','Jacuzzi','Sauna','Cheminée','Détecteur de fumée','Animaux acceptés','Machine à café','Lave-vaisselle','Micro-ondes','Vélo']
-  const streets = {
-    'Paris':['Rue de Rivoli','Boulevard Saint-Germain','Rue du Faubourg Saint-Honoré','Avenue des Champs-Élysées','Rue Mouffetard','Rue des Martyrs','Boulevard Haussmann','Rue Montorgueil','Rue de Buci','Place des Vosges'],
-    'Lyon':['Rue de la République','Rue Mercière','Montée de la Grande Côte','Cours Lafayette','Rue Victor Hugo','Quai Saint-Antoine','Rue des Marronniers','Place Bellecour'],
-    'Marseille':['La Canebière','Rue de la République','Corniche Kennedy','Quai du Port','Rue Paradis','Boulevard Longchamp','Rue Saint-Ferréol','Avenue du Prado'],
-    'Bordeaux':['Rue Sainte-Catherine','Cours de l\'Intendance','Rue Vital Carles','Quai des Chartrons','Place de la Bourse','Rue Notre-Dame','Cours Victor Hugo'],
-    'Nice':['Promenade des Anglais','Rue de France','Boulevard Jean Jaurès','Avenue Jean Médecin','Quai des États-Unis','Rue Masséna','Place Garibaldi'],
-    'Toulouse':['Rue d\'Alsace-Lorraine','Rue du Taur','Place du Capitole','Boulevard de Strasbourg','Rue Saint-Rome','Allées Jean Jaurès','Quai de la Daurade'],
-    'Lille':['Rue de la Grande Chaussée','Rue Esquermoise','Place du Général de Gaulle','Rue Nationale','Rue Solférino','Boulevard Carnot'],
-    'Strasbourg':['Rue des Grandes Arcades','Rue du Fossé des Tanneurs','Quai Saint-Thomas','Place Kléber','Rue de la Nuée-Bleue','Allée de la Robertsau'],
-    'Nantes':['Rue du Calvaire','Rue Crébillon','Place Royale','Quai de la Fosse','Rue des Olivettes','Boulevard de la Prairie au Duc'],
-    'Montpellier':['Rue de la Loge','Grand Rue Jean Moulin','Place de la Comédie','Rue Saint-Guilhem','Boulevard du Jeu de Paume','Rue Foch'],
-  }
-  const titleTemplates = [
-    (c,d) => `Appartement cosy avec vue ${d} - ${c}`,
-    (c,d) => `Charmant studio au cœur du ${d}, ${c}`,
-    (c,d) => `Magnifique loft rénové dans le ${d}, ${c}`,
-    (c,d) => `Superbe maison de ville, ${c} - ${d}`,
-    (c,d) => `Duplex lumineux proche ${d}, ${c}`,
-    (c,d) => `Bel appartement haussmannien ${c}, quartier ${d}`,
-    (c,d) => `Penthouse avec terrasse panoramique - ${c} ${d}`,
-    (c,d) => `Nid douillet au calme dans le ${d}, ${c}`,
-    (c,d) => `Villa moderne avec piscine - ${c}, quartier ${d}`,
-    (c,d) => `Studio design centre-ville - ${c} ${d}`,
-    (c,d) => `Appartement familial spacieux ${c} - ${d}`,
-    (c,d) => `Loft atypique avec jardin - ${c}, ${d}`,
-    (c,d) => `Charmante maison de charme ${c} - ${d}`,
-    (c,d) => `Appartement vue imprenable sur ${d}, ${c}`,
-    (c,d) => `Superbe propriété avec jacuzzi - ${c} ${d}`,
-  ]
-  const descriptions = [
-    (t,d) => `Superbe ${t.toLowerCase()} entièrement rénové situé dans le quartier prisé ${d}. Décoration soignée, lumineux et calme. À deux pas des commerces, restaurants et transports en commun. Parfait pour découvrir la ville.`,
-    (t,d) => `Magnifique ${t.toLowerCase()} au charme authentique dans le ${d}. Hauteurs sous plafond, poutres apparentes, parquet d'époque. Tout le confort moderne dans un cadre historique.`,
-    (t,d) => `Bel ${t.toLowerCase()} moderne et fonctionnel situé dans le ${d}. Cuisine équipée, salle de bain refaite à neuf, literie haut de gamme. Idéal pour un séjour en couple ou en famille.`,
-    (t,d) => `Découvrez ce ${t.toLowerCase()} exceptionnel au cœur du ${d}. Prestations haut de gamme, décoration signée par un architecte d'intérieur. Wifi haut débit, espace de travail dédié.`,
-    (t,d) => `Joli ${t.toLowerCase()} avec balcon donnant sur le quartier animé ${d}. Calme et lumineux, parfait pour les voyageurs souhaitant vivre comme un local.`,
-    (t,d) => `Ce ${t.toLowerCase()} de charme vous accueille dans le quartier authentique ${d}. Proche des principaux sites touristiques, commerces de proximité et métro.`,
-  ]
-
+/* ─── Seeded host accounts ─── */
+function seedHosts() {
   const hostPw = bcrypt.hashSync('password123', 10)
   const hosts = [
-    { id: uuidv4(), name:'Marie Dupont', email:'marie@example.com' },
-    { id: uuidv4(), name:'Jean Martin', email:'jean@example.com' },
-    { id: uuidv4(), name:'Sophie Bernard', email:'sophie@example.com' },
-    { id: uuidv4(), name:'Pierre Dubois', email:'pierre@example.com' },
-    { id: uuidv4(), name:'Camille Petit', email:'camille@example.com' },
-    { id: uuidv4(), name:'Lucas Moreau', email:'lucas@example.com' },
+    { name:'Marie Dupont', email:'marie@example.com' },
+    { name:'Jean Martin', email:'jean@example.com' },
+    { name:'Sophie Bernard', email:'sophie@example.com' },
+    { name:'Pierre Dubois', email:'pierre@example.com' },
+    { name:'Camille Petit', email:'camille@example.com' },
+    { name:'Lucas Moreau', email:'lucas@example.com' },
   ]
-  hosts.forEach(h => run('INSERT INTO users (id,name,email,password,isHost,hostSince,verified) VALUES (?,?,?,?,?,datetime("now"),1)', [h.id,h.name,h.email,hostPw,1]))
-
+  hosts.forEach(h => run('INSERT OR IGNORE INTO users (id,name,email,password,isHost,hostSince,verified) VALUES (?,?,?,?,?,datetime("now"),1)', [uuidv4(), h.name, h.email, hostPw]))
   const guestId = uuidv4()
-  run('INSERT INTO users (id,name,email,password,verified) VALUES (?,?,?,?,1)', [guestId,'Test Guest','guest@example.com',hostPw])
-
-  const typeToCat = { 'Appartement entier':'ville','Maison entière':'maisons','Chambre privée':'ville','Chambre partagée':'ville','Loft':'insolite','Villa':'piscine','Chalet':'montagne','Studio':'ville' }
-
-  let idx = 0
-  batch(() => {
-    cities.forEach(city => {
-      const cityStreets = streets[city.city]
-      for (let i = 0; i < 12; i++) {
-        idx++
-        const type = types[Math.floor(Math.random() * types.length)]
-        let category = typeToCat[type] || 'ville'
-        if (Math.random() > 0.75) category = categories[Math.floor(Math.random() * categories.length)]
-        const district = city.districts[Math.floor(Math.random() * city.districts.length)]
-        const street = cityStreets[Math.floor(Math.random() * cityStreets.length)]
-        const num = Math.floor(Math.random() * 80) + 1
-        const imgList = [...(catImages[category]||catImages.ville)].concat(catImages.ville).sort(() => Math.random() - 0.5).slice(0, 5).join('|')
-        const title = titleTemplates[Math.floor(Math.random() * titleTemplates.length)](city.city, district)
-        const desc = descriptions[Math.floor(Math.random() * descriptions.length)](type, district)
-        const price = category === 'ville' ? Math.floor(Math.random() * 200) + 50 : category === 'plage' ? Math.floor(Math.random() * 300) + 80 : Math.floor(Math.random() * 250) + 40
-        const host = hosts[idx % hosts.length]
-        const beds = Math.floor(Math.random() * 3) + 1
-        const bedrooms = Math.min(beds, Math.floor(Math.random() * 3) + 1)
-        run(
-          'INSERT INTO listings (id,hostId,title,description,type,category,city,country,price,images,guests,bedrooms,beds,baths,amenities,lat,lng,rating,reviewCount,superhost) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
-          [uuidv4(), host.id, title, desc, type, category, city.city, 'France', price, imgList,
-          Math.floor(Math.random() * 4) + 1, bedrooms, beds, Math.floor(Math.random() * 2) + 1,
-          amenities.filter(() => Math.random() > 0.5).slice(0, Math.floor(Math.random() * 4) + 3).join(', '),
-          city.lat + (Math.random() - 0.5) * 0.08, city.lng + (Math.random() - 0.5) * 0.08,
-          parseFloat((Math.random() * 1.5 + 3.5).toFixed(2)), Math.floor(Math.random() * 150), Math.random() > 0.75 ? 1 : 0]
-        )
-      }
-    })
-  })
-  console.log('✓ Database seeded with 120 real-world listings, 6 hosts, 1 guest')
+  run('INSERT OR IGNORE INTO users (id,name,email,password,verified) VALUES (?,?,?,?,1)', [guestId,'Test Guest','guest@example.com',hostPw])
+  console.log('✓ Host accounts ready (marie@example.com / password123)')
 }
 
 function auth(req, res, next) {
