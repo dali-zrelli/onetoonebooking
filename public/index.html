@@ -709,7 +709,11 @@ function renderHostListings(listings) {
             <td>${l.city}</td>
             <td>${l.price}€ <span style="font-size:12px;color:var(--text-light)">/nuit</span></td>
             <td><span class="status status-${l.active?'confirmed':'cancelled'}">${l.active?'Actif':'Inactif'}</span></td>
-            <td><div style="display:flex;gap:4px"><button class="btn btn-outline btn-sm" onclick="showListingEditor('${l.id}')">Modifier</button><button class="btn btn-danger btn-sm" onclick="deleteListing('${l.id}')">Supprimer</button></div></td>
+            <td><div style="display:flex;gap:4px">
+              <button class="btn btn-outline btn-sm" onclick="showListingEditor('${l.id}')">Modifier</button>
+              <button class="btn btn-sm ${l.active?'btn-ghost':'btn-success'}" onclick="toggleListingActive('${l.id}',${l.active?0:1})" style="font-size:12px">${l.active?'Désactiver':'Publier'}</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteListing('${l.id}')">Supprimer</button>
+            </div></td>
           </tr>
         `).join('')}
       </tbody>
@@ -774,6 +778,15 @@ async function cancelClientBooking(bookingId) {
     const d = await safeJson(r)
     if (!r.ok) throw new Error(d.error || 'Erreur annulation')
     closeModal(); toast(d.message, 'success')
+  } catch (err) { toast(err.message, 'error') }
+}
+
+async function toggleListingActive(id, active) {
+  try {
+    const r = await fetch(`${API}/api/listings/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ active }) })
+    const d = await safeJson(r)
+    if (!r.ok) throw new Error(d.error || 'Erreur')
+    toast(d.message, 'success'); loadHostData()
   } catch (err) { toast(err.message, 'error') }
 }
 
@@ -946,11 +959,11 @@ async function showProfile() {
   try {
     const r = await fetch(`${API}/api/auth/me`, { headers: { 'Authorization': `Bearer ${state.token}` } })
     const u = await safeJson(r)
-    if (!r.ok) throw new Error(u.error || 'Erreur profil')
+    if (!r.ok || !u) throw new Error(u?.error || 'Erreur profil')
     showModal('Mon profil', `
       <div class="profile-info">
-        <div class="field"><label>Nom</label><p>${u.name}</p></div>
-        <div class="field"><label>Email</label><p>${u.email}</p></div>
+        <div class="field"><label>Nom</label><p>${u.name||''}</p></div>
+        <div class="field"><label>Email</label><p>${u.email||''}</p></div>
         <div class="field"><label>Email vérifié</label><p>${u.verified ? '✅ Oui' : '❌ Non'}</p></div>
         <div class="field"><label>Statut</label><p>${u.isHost ? '🏡 Hôte' : '👤 Voyageur'}</p></div>
         ${u.hostSince ? `<div class="field"><label>Hôte depuis</label><p>${formatDate(u.hostSince)}</p></div>` : ''}

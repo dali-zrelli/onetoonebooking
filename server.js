@@ -218,7 +218,9 @@ app.post('/api/auth/login', (req, res) => {
 })
 
 app.get('/api/auth/me', auth, (req, res) => {
-  res.json(queryOne('SELECT id,name,email,isHost,hostSince,phone,verified FROM users WHERE id = ?', [req.user.id]))
+  const u = queryOne('SELECT id,name,email,isHost,hostSince,phone,verified FROM users WHERE id = ?', [req.user.id])
+  if (!u) return res.status(404).json({ error: 'Utilisateur non trouvé' })
+  res.json(u)
 })
 
 app.get('/api/auth/verify-email', (req, res) => {
@@ -254,6 +256,7 @@ app.post('/api/auth/host', auth, (req, res) => {
   try {
     const { phone } = req.body
     const user = queryOne('SELECT verified FROM users WHERE id = ?', [req.user.id])
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' })
     if (!user.verified) return res.status(403).json({ error: 'Vous devez confirmer votre email avant de devenir hôte', needsVerification: true })
     run('UPDATE users SET isHost = 1, hostSince = datetime("now"), phone = ? WHERE id = ?', [phone || '', req.user.id])
     const token = jwt.sign({ id:req.user.id, name:req.user.name, email:req.user.email, isHost:1, verified:1 }, JWT_SECRET, { expiresIn:'7d' })
