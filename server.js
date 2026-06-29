@@ -72,8 +72,8 @@ function formatListing(l) {
 }
 
 /* ─── Auth ─── */
+// Test endpoint - works without DB
 app.post('/api/debug', (req, res) => {
-  console.log('DEBUG endpoint hit')
   res.json({ ok: true, body: req.body })
 })
 
