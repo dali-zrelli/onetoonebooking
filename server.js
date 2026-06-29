@@ -83,9 +83,7 @@ app.post('/api/auth/signup', async (req, res) => {
     const id = uuidv4()
     const token = jwt.sign({ id, name, email, isHost:0, verified:1 }, JWT_SECRET, { expiresIn:'7d' })
     await run('INSERT INTO users (id,name,email,password,verified) VALUES (?,?,?,?,1)', [id, name, email, bcrypt.hashSync(password, 10)])
-    try {
-      await mail.sendWelcomeEmail(email, name)
-    } catch (mailErr) { console.error('Mail error:', mailErr.message) }
+    mail.sendWelcomeEmail(email, name).catch(e => console.error('Mail error:', e.message))
     res.json({ token, user:{ id, name, email, isHost:0, verified:1 }, message: 'Compte créé avec succès !' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
@@ -132,7 +130,7 @@ app.post('/api/auth/resend-verification', auth, async (req, res) => {
     if (user.verified) return res.json({ message: 'Email déjà vérifié' })
     const verificationToken = user.verificationToken || uuidv4()
     if (!user.verificationToken) await run('UPDATE users SET verificationToken = ? WHERE id = ?', [verificationToken, user.id])
-    await mail.sendVerificationEmail(user.email, user.name, verificationToken)
+    mail.sendVerificationEmail(user.email, user.name, verificationToken).catch(e => console.error('Mail error:', e.message))
     res.json({ message: 'Email de vérification renvoyé !' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
@@ -251,10 +249,8 @@ app.post('/api/bookings', auth, async (req, res) => {
     const id = uuidv4()
     await run('INSERT INTO bookings (id,listingId,userId,checkIn,checkOut,guests,totalPrice,nights,status,message) VALUES (?,?,?,?,?,?,?,?,\'en_attente\',?)',
       [id, listingId, req.user.id, checkIn, checkOut, guests || 1, listing.price * nights, nights, message || ''])
-    try {
-      const fd = (d) => new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
-      await mail.sendBookingRequestEmail(listing.hostEmail, listing.hostName, req.user.name, listing.title, fd(checkIn), fd(checkOut), nights, listing.price * nights, message)
-    } catch (mailErr) { console.error('Mail error:', mailErr.message) }
+    const fd = (d) => new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
+    mail.sendBookingRequestEmail(listing.hostEmail, listing.hostName, req.user.name, listing.title, fd(checkIn), fd(checkOut), nights, listing.price * nights, message).catch(e => console.error('Mail error:', e.message))
     res.json({ id, totalPrice: listing.price * nights, nights, status: 'en_attente', message: 'Demande envoyée ! En attente de confirmation.' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
@@ -274,11 +270,10 @@ app.put('/api/bookings/:id/status', auth, async (req, res) => {
     if (!booking) return res.status(404).json({ error: 'Réservation non trouvée' })
     if (booking.hostId !== req.user.id && booking.userId !== req.user.id) return res.status(403).json({ error: 'Non autorisé' })
     await run('UPDATE bookings SET status = ? WHERE id = ?', [status, req.params.id])
-    try {
-      const guest = await queryOne('SELECT name, email FROM users WHERE id = ?', [booking.userId])
+    queryOne('SELECT name, email FROM users WHERE id = ?', [booking.userId]).then(guest => {
       const fd = (d) => new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
-      await mail.sendBookingStatusEmail(guest.email, guest.name, booking.listingTitle, status, fd(booking.checkIn), fd(booking.checkOut), booking.totalPrice)
-    } catch (mailErr) { console.error('Mail error:', mailErr.message) }
+      mail.sendBookingStatusEmail(guest.email, guest.name, booking.listingTitle, status, fd(booking.checkIn), fd(booking.checkOut), booking.totalPrice).catch(e => console.error('Mail error:', e.message))
+    }).catch(e => console.error('DB error fetching guest:', e.message))
     res.json({ message: `Réservation ${status}` })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
