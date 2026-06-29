@@ -197,13 +197,12 @@ app.post('/api/auth/signup', async (req, res) => {
     if (password.length < 4) return res.status(400).json({ error: 'Mot de passe trop court (min 4 caractères)' })
     if (queryOne('SELECT id FROM users WHERE email = ?', [email])) return res.status(409).json({ error: 'Email déjà utilisé' })
     const id = uuidv4()
-    const verificationToken = uuidv4()
-    run('INSERT INTO users (id,name,email,password,verificationToken) VALUES (?,?,?,?,?)', [id, name, email, bcrypt.hashSync(password, 10), verificationToken])
+    const token = jwt.sign({ id, name, email, isHost:0, verified:1 }, JWT_SECRET, { expiresIn:'7d' })
+    run('INSERT INTO users (id,name,email,password,verified) VALUES (?,?,?,?,1)', [id, name, email, bcrypt.hashSync(password, 10)])
     try {
-      await mail.sendVerificationEmail(email, name, verificationToken)
       await mail.sendWelcomeEmail(email, name)
     } catch (mailErr) { console.error('Mail error:', mailErr.message) }
-    res.json({ message: 'Compte créé ! Vérifiez votre email pour confirmer votre adresse.', needsVerification: true })
+    res.json({ token, user:{ id, name, email, isHost:0, verified:1 }, message: 'Compte créé avec succès !' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 

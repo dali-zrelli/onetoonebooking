@@ -383,15 +383,14 @@ async function handleAuth(e, mode) {
   try {
     const r = await fetch(`${API}/api/auth/${mode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     const d = await safeJson(r)
-    if (!r.ok) throw new Error(d.error || 'Erreur authentification')
-    if (mode === 'signup') {
-      closeModal(); toast(d.message, 'success')
-    } else {
-      state.token = d.token; state.user = d.user
-      localStorage.setItem('token', d.token); localStorage.setItem('user', JSON.stringify(d.user))
-      updateUI(); closeModal(); toast('Connecté avec succès !', 'success')
-      loadListings()
+    if (!r.ok) {
+      if (d.error === 'Email déjà utilisé') { closeModal(); toast('Email déjà utilisé — connectez-vous', 'info'); setTimeout(() => showAuth(false), 500); return }
+      throw new Error(d.error || 'Erreur authentification')
     }
+    state.token = d.token; state.user = d.user
+    localStorage.setItem('token', d.token); localStorage.setItem('user', JSON.stringify(d.user))
+    updateUI(); closeModal(); toast(mode === 'signup' ? 'Compte créé !' : 'Connecté !', 'success')
+    loadListings()
   } catch (err) { toast(err.message, 'error') }
 }
 
