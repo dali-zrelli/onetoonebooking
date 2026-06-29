@@ -72,12 +72,17 @@ function formatListing(l) {
 }
 
 /* ─── Auth ─── */
+app.post('/api/debug', (req, res) => {
+  console.log('DEBUG endpoint hit')
+  res.json({ ok: true, body: req.body })
+})
+
 app.post('/api/auth/signup', async (req, res) => {
-  const { name, email, password, confirmPassword } = req.body
-  if (!name || !email || !password) return res.status(400).json({ error: 'Champs requis' })
-  if (password !== confirmPassword) return res.status(400).json({ error: 'Les mots de passe ne correspondent pas' })
-  if (password.length < 4) return res.status(400).json({ error: 'Mot de passe trop court (min 4 caractères)' })
   try {
+    const { name, email, password, confirmPassword } = req.body
+    if (!name || !email || !password) return res.status(400).json({ error: 'Champs requis' })
+    if (password !== confirmPassword) return res.status(400).json({ error: 'Les mots de passe ne correspondent pas' })
+    if (password.length < 4) return res.status(400).json({ error: 'Mot de passe trop court (min 4 caractères)' })
     const existing = await queryOne('SELECT id FROM users WHERE email = ?', [email])
     if (existing) return res.status(409).json({ error: 'Email déjà utilisé' })
     const id = uuidv4()
