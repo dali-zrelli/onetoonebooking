@@ -82,9 +82,7 @@ app.post('/api/auth/signup', async (req, res) => {
     if (existing) return res.status(409).json({ error: 'Email déjà utilisé' })
     const id = uuidv4()
     const token = jwt.sign({ id, name, email, isHost:0, verified:1 }, JWT_SECRET, { expiresIn:'7d' })
-    res.json({ token, user:{ id, name, email, isHost:0, verified:1 }, message: 'Compte créé avec succès !' })
-    await run('INSERT INTO users (id,name,email,password,verified) VALUES (?,?,?,?,1)', [id, name, email, bcrypt.hashSync(password, 10)])
-    mail.sendWelcomeEmail(email, name).catch(e => console.error('Mail error:', e.message))
+    return res.json({ token, user:{ id, name, email, isHost:0, verified:1 }, message: 'Compte créé avec succès !' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
