@@ -106,12 +106,6 @@ async function run(sql, params = []) {
   await pool.query(q(sql), params)
 }
 
-async function initDb() {
-  const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8')
-  await pool.query(schema)
-  console.log('✓ Database ready')
-}
-
 function auth(req, res, next) {
   const header = req.headers.authorization
   if (!header) return res.status(401).json({ error: 'Non authentifié' })
