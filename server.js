@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const cors = require('cors')
 const path = require('path')
 const fs = require('fs')
+const dns = require('dns')
 const { v4: uuidv4 } = require('uuid')
 const { Pool } = require('pg')
 const mail = require('./mail')
@@ -27,11 +28,64 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.static(path.join(__dirname, 'public')))
 
 /* ─── PostgreSQL connection ─── */
-const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://postgres:Mohamedalizrelli.190@db.hkxybruywbkpqisrtuww.supabase.co:5432/postgres'
-const pool = new Pool({
-  connectionString: DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-})
+const DB_PASS = 'Mohamedalizrelli.190'
+const DB_USER = 'postgres'
+const DB_NAME = 'postgres'
+const DIRECT_HOST = 'db.hkxybruywbkpqisrtuww.supabase.co'
+const POOLER_HOSTS = [
+  'aws-0-eu-west-1.pooler.supabase.com',
+  'aws-0-eu-west-2.pooler.supabase.com',
+  'aws-0-eu-west-3.pooler.supabase.com',
+  'aws-0-eu-central-1.pooler.supabase.com',
+  'aws-0-us-east-1.pooler.supabase.com',
+  'aws-0-us-east-2.pooler.supabase.com',
+]
+
+async function findDatabase() {
+  const url = (host, port) => `postgresql://${DB_USER}:${DB_PASS}@${host}:${port}/${DB_NAME}`
+
+  // Try direct IPv6 connection first (resolve hostname to IPv6 ourselves)
+  try {
+    const addrs = await dns.promises.resolve6(DIRECT_HOST)
+    const ipv6 = addrs[0]
+    console.log(`Trying direct IPv6 → [${ipv6}]:5432`)
+    const pool = new Pool({ connectionString: url(`[${ipv6}]`, 5432), ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 5000 })
+    await pool.query('SELECT 1')
+    console.log('✓ Connected via direct IPv6')
+    return pool
+  } catch (e) { console.log('  Direct IPv6 failed:', e.message) }
+
+  // Try pooler hosts with IPv4
+  for (const host of POOLER_HOSTS) {
+    try {
+      console.log(`Trying pooler → ${host}:6543`)
+      const pool = new Pool({ connectionString: url(host, 6543), ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 5000 })
+      await pool.query('SELECT 1')
+      console.log(`✓ Connected via pooler ${host}`)
+      return pool
+    } catch (e) { console.log(`  ${host} failed:`, e.message) }
+  }
+
+  // Fallback: try direct with hostname (might work if DNS has both A/AAAA)
+  try {
+    console.log('Fallback: trying direct hostname...')
+    const pool = new Pool({ connectionString: url(DIRECT_HOST, 5432), ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 5000 })
+    await pool.query('SELECT 1')
+    console.log('✓ Connected via direct hostname')
+    return pool
+  } catch (e) { console.log('  Fallback failed:', e.message) }
+
+  throw new Error('Could not connect to any database endpoint')
+}
+
+let pool
+
+async function initDb() {
+  pool = await findDatabase()
+  const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8')
+  await pool.query(schema)
+  console.log('✓ Database ready')
+}
 
 function q(sql) {
   let i = 0
@@ -74,10 +128,6 @@ function formatListing(l) {
 
 /* ─── Auth ─── */
 // Test endpoint - works without DB
-app.post('/api/debug', (req, res) => {
-  res.json({ ok: true, body: req.body })
-})
-
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { name, email, password, confirmPassword } = req.body
@@ -92,15 +142,6 @@ app.post('/api/auth/signup', async (req, res) => {
     res.json({ token, user:{ id, name, email, isHost:0, verified:1 }, message: 'Compte créé avec succès !' })
     mail.sendWelcomeEmail(email, name).catch(e => console.error('Mail error:', e.message))
   } catch (e) { res.status(500).json({ error: e.message }) }
-})
-
-app.post('/api/test-signup', async (req, res) => {
-  const { name, email, password } = req.body
-  if (!name || !email || !password) return res.status(400).json({ error: 'Champs requis' })
-  const id = uuidv4()
-  const token = jwt.sign({ id, name, email, isHost:0, verified:1 }, JWT_SECRET, { expiresIn:'7d' })
-  await run('INSERT INTO users (id,name,email,password,verified) VALUES (?,?,?,?,1)', [id, name, email, bcrypt.hashSync(password, 10)])
-  res.json({ token, user:{ id, name, email, isHost:0, verified:1 }, message: 'OK' })
 })
 
 app.post('/api/auth/login', async (req, res) => {
