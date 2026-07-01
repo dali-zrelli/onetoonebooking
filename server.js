@@ -28,19 +28,11 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.static(path.join(__dirname, 'public')))
 
 /* ─── PostgreSQL connection ─── */
-const DB_PASS = 'Mohamedalizrelli.190'
-const DB_USER = 'postgres'
-const DB_NAME = 'postgres'
-const DIRECT_HOST = 'db.hkxybruywbkpqisrtuww.supabase.co'
-const POOLER_HOSTS = [
-  'aws-0-eu-west-1.pooler.supabase.com',
-  'aws-0-eu-west-2.pooler.supabase.com',
-  'aws-0-eu-west-3.pooler.supabase.com',
-  'aws-0-eu-central-1.pooler.supabase.com',
-  'aws-0-us-east-1.pooler.supabase.com',
-  'aws-0-us-east-2.pooler.supabase.com',
-]
-
+const DB_USER = process.env.DB_USER || 'postgres.hkxybruywbkpqisrtuww'
+const DB_PASS = process.env.DB_PASS   // set this in Render env vars, not hardcoded
+const DB_HOST = process.env.DB_HOST || 'aws-0-eu-west-2.pooler.supabase.com'
+const DB_PORT = process.env.DB_PORT || 6543   // 6543 = transaction pooler, 5432 = session pooler
+const DB_NAME = process.env.DB_NAME || 'postgres'
 async function findDatabase() {
   const url = (host, port) => `postgresql://${DB_USER}:${DB_PASS}@${host}:${port}/${DB_NAME}`
 
@@ -78,20 +70,21 @@ async function findDatabase() {
   throw new Error('Could not connect to any database endpoint')
 }
 
-let pool
+const pool = new Pool({
+  connectionString: `postgresql://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}`,
+  ssl: { rejectUnauthorized: false },
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+})
 
 async function initDb() {
-  pool = await findDatabase()
+  await pool.query('SELECT 1')
+  console.log('✓ Connected to Supabase via pooler')
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8')
-  // Execute each statement separately — pg query() does not support
-  // multiple statements in a single call with the extended protocol.
   const statements = schema.split(';').map(s => s.trim()).filter(Boolean)
   for (const stmt of statements) {
-    try {
-      await pool.query(stmt)
-    } catch (e) {
-      console.error('  Schema statement error:', e.message)
-    }
+    try { await pool.query(stmt) } catch (e) { console.error('  Schema statement error:', e.message) }
   }
   console.log('✓ Database ready')
 }
