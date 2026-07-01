@@ -13,10 +13,12 @@ const multer = require('multer')
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
 
 cloudinary.config({
-  cloud_name: 'dlhujvgrp',
-  api_key: '532689538597837',
-  api_secret: 'MD1S6e72HvUBapoqSqifZPWyeV4'
+  cloud_name: process.env.CLOUD_NAME || 'dlhujvgrp',
+  api_key: process.env.CLOUD_API_KEY || '532689538597837',
+  api_secret: process.env.CLOUD_API_SECRET || 'MD1S6e72HvUBapoqSqifZPWyeV4'
 })
+
+const stripe = process.env.STRIPE_SECRET ? require('stripe')(process.env.STRIPE_SECRET) : null
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -133,6 +135,7 @@ const CASE_MAP = {
   lastmessage:'lastMessage',
   paymentmethod:'paymentMethod', paymentstatus:'paymentStatus',
   relatedid:'relatedId',
+  paymentintentid:'paymentIntentId',
 }
 
 function fixCase(obj) {
@@ -330,7 +333,7 @@ app.delete('/api/listings/:id', auth, async (req, res) => {
 /* ─── Bookings ─── */
 app.post('/api/bookings', auth, async (req, res) => {
   try {
-    const { listingId, checkIn, checkOut, guests, message, paymentMethod } = req.body
+    const { listingId, checkIn, checkOut, guests, message, paymentMethod, paymentIntentId } = req.body
     const raw = await queryOne('SELECT l.*, u.name as hostName, u.email as hostEmail FROM listings l JOIN users u ON l.hostId = u.id WHERE l.id = ? AND l.active = 1', [listingId])
     if (!raw) return res.status(404).json({ error: 'Logement non trouvé' })
     const listing = fixCase(raw)
@@ -341,8 +344,8 @@ app.post('/api/bookings', auth, async (req, res) => {
     const nights = Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
     const id = uuidv4()
     const pm = paymentMethod || 'carte'
-    await run('INSERT INTO bookings (id,listingId,userId,checkIn,checkOut,guests,totalPrice,nights,status,message,paymentMethod,paymentStatus) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
-      [id, listingId, req.user.id, checkIn, checkOut, guests || 1, listing.price * nights, nights, 'en_attente', message || '', pm, 'en_attente'])
+    await run('INSERT INTO bookings (id,listingId,userId,checkIn,checkOut,guests,totalPrice,nights,status,message,paymentMethod,paymentStatus,paymentIntentId) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',
+      [id, listingId, req.user.id, checkIn, checkOut, guests || 1, listing.price * nights, nights, 'en_attente', message || '', pm, pm === 'carte' ? 'autorisé' : pm === 'onsite' ? 'sur_place' : 'en_attente', paymentIntentId || null])
     await run('INSERT INTO notifications (userId, type, title, message, relatedId) VALUES (?,?,?,?,?)',
       [listing.hostId, 'booking', 'Nouvelle réservation', `${req.user.name} souhaite réserver ${listing.title}`, id])
     const fd = (d) => new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
@@ -369,6 +372,9 @@ app.put('/api/bookings/:id/status', auth, async (req, res) => {
     await run('UPDATE bookings SET status = ?, paymentStatus = CASE WHEN ? = \'confirmé\' THEN \'payé\' ELSE paymentStatus END WHERE id = ?', [status, status, req.params.id])
     await run('INSERT INTO notifications (userId, type, title, message, relatedId) VALUES (?,?,?,?,?)',
       [booking.userId, 'booking', 'Réservation ' + status, `Votre réservation pour ${booking.listingTitle} a été ${status}`, req.params.id])
+    if (status === 'confirmé' && booking.paymentIntentId && stripe) {
+      stripe.paymentIntents.capture(booking.paymentIntentId).then(() => {}).catch(e => console.error('Capture error:', e.message))
+    }
     queryOne('SELECT name, email FROM users WHERE id = ?', [booking.userId]).then(guest => {
       const fd = (d) => new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
       mail.sendBookingStatusEmail(guest.email, guest.name, booking.listingTitle, status, fd(booking.checkIn), fd(booking.checkOut), booking.totalPrice).catch(e => console.error('Mail error:', e.message))
@@ -484,6 +490,35 @@ app.post('/api/notifications/read', auth, async (req, res) => {
     if (id) { await run('UPDATE notifications SET read = true WHERE id = ? AND userId = ?', [id, req.user.id]) }
     else { await run('UPDATE notifications SET read = true WHERE userId = ?', [req.user.id]) }
     res.json({ message: 'Notifications marquées comme lues' })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+/* ─── Stripe Payment ─── */
+app.post('/api/create-payment-intent', auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: 'Paiement par carte non disponible' })
+    const { amount, paymentMethodId, description } = req.body
+    if (!amount || !paymentMethodId) return res.status(400).json({ error: 'Montant et méthode requis' })
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount),
+      currency: 'eur',
+      payment_method: paymentMethodId,
+      confirmation_method: 'manual',
+      confirm: true,
+      description: description || 'Réservation ONETOONE.booking',
+      metadata: { userId: req.user.id }
+    })
+    res.json({ clientSecret: paymentIntent.client_secret, paymentIntentId: paymentIntent.id })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+app.post('/api/capture-payment', auth, async (req, res) => {
+  try {
+    if (!stripe) return res.status(503).json({ error: 'Paiement par carte non disponible' })
+    const { paymentIntentId } = req.body
+    if (!paymentIntentId) return res.status(400).json({ error: 'ID requis' })
+    const intent = await stripe.paymentIntents.capture(paymentIntentId)
+    res.json({ status: intent.status, message: 'Paiement capturé' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 

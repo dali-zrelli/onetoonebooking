@@ -7,6 +7,7 @@
 <link rel="icon" type="image/png" href="/icon-header-2.png">
 <link rel="apple-touch-icon" href="/icon-header-2.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://js.stripe.com/v3/"></script>
 <style>
 :root {
   --primary: #ff385c; --primary-dark: #e31c5f;
@@ -199,7 +200,8 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 .review-text{font-size:14px;margin-top:8px;line-height:1.6;color:#444}
 
 /* Map */
-.map-container{border-radius:14px;overflow:hidden;border:1px solid #e8e8e8;box-shadow:0 2px 8px rgba(0,0,0,.04);height:400px;width:100%}
+.map-container{border-radius:14px;overflow:hidden;border:1px solid #e8e8e8;box-shadow:0 2px 8px rgba(0,0,0,.04);height:400px;width:100%;position:relative;z-index:1}
+.map-container .leaflet-container{z-index:1}
 .map-container iframe{display:block;width:100%;height:400px}
 
 /* Host detail card */
@@ -356,6 +358,9 @@ main{max-width:1440px;margin:0 auto;padding:24px}
   .chat-conversations{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:0 0 8px;max-height:140px}
   .notif-dropdown{min-width:280px;right:-60px}
   .map-container{height:260px}
+  .payment-option{min-width:70px;padding:10px 6px;font-size:11px}
+  .payment-option .pay-icon{font-size:22px}
+  #paymentSection label{font-size:11px!important}
 }
 
 /* ─── Toast ─── */
@@ -413,10 +418,12 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 
 /* ─── Payment Method ─── */
 .payment-methods{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.payment-option{flex:1;min-width:80px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border:1.5px solid #ddd;border-radius:12px;cursor:pointer;transition:all .2s;font-size:12px;font-weight:500;color:#888;background:#fff}
+.payment-option{flex:1;min-width:90px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border:1.5px solid #ddd;border-radius:12px;cursor:pointer;transition:all .2s;font-size:12px;font-weight:500;color:#888;background:#fff}
 .payment-option:hover{border-color:var(--primary);color:var(--primary)}
 .payment-option.selected{border-color:var(--primary);background:#fff5f6;color:var(--primary)}
-.payment-option .pay-icon{font-size:24px}
+.payment-option .pay-icon{font-size:26px}
+#stripeCardSection .StripeElement{width:100%}
+#stripeCardSection .StripeElement--focus{border-color:var(--primary)!important}
 
 /* ─── Map Toggle ─── */
 .map-toggle{display:flex;gap:0;margin-bottom:10px;border:1px solid #ddd;border-radius:10px;overflow:hidden;width:fit-content}
@@ -522,7 +529,7 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- Chat Modal (hidden by default) -->
-<div class="modal-overlay" id="chatOverlay" style="z-index:350">
+<div class="modal-overlay" id="chatOverlay" style="z-index:500">
   <div class="modal modal-xl" style="max-width:800px">
     <div class="modal-header">
       <h3>Messagerie</h3>
@@ -723,22 +730,29 @@ async function sendMessage() {
 document.getElementById('chatOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeChat() })
 
 /* ─── Map (Leaflet) ─── */
-let detailMap = null
+let detailMap = null, mapInitAttempts = 0
 
 function initDetailMap() {
   if (detailMap) { detailMap.remove(); detailMap = null }
   const container = document.getElementById('detailMap')
-  if (!container) return
+  if (!container || container.offsetParent === null) {
+    if (mapInitAttempts++ < 10) setTimeout(initDetailMap, 300)
+    return
+  }
+  mapInitAttempts = 0
   const lat = parseFloat(container.dataset.lat) || 48.85
   const lng = parseFloat(container.dataset.lng) || 2.333
-  detailMap = L.map(container).setView([lat, lng], 14)
+  container.style.height = '400px'
+  detailMap = L.map(container, { zoomControl: true, scrollWheelZoom: false }).setView([lat, lng], 14)
   const stdLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' })
   const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: '© Esri' })
   stdLayer.addTo(detailMap)
   L.marker([lat, lng]).addTo(detailMap)
   detailMap._stdLayer = stdLayer
   detailMap._satLayer = satLayer
-  setTimeout(() => detailMap.invalidateSize(), 500)
+  detailMap.invalidateSize()
+  container.addEventListener('mouseenter', () => detailMap.scrollWheelZoom.enable())
+  container.addEventListener('mouseleave', () => detailMap.scrollWheelZoom.disable())
 }
 
 function switchMapLayer(layer, btn) {
@@ -746,24 +760,71 @@ function switchMapLayer(layer, btn) {
   if (!container || !detailMap) return
   const lat = parseFloat(container.dataset.lat) || 48.85
   const lng = parseFloat(container.dataset.lng) || 2.333
-  if (layer === 'satellite') {
-    detailMap.removeLayer(detailMap._stdLayer)
-    detailMap._satLayer.addTo(detailMap)
-  } else {
-    detailMap.removeLayer(detailMap._satLayer)
-    detailMap._stdLayer.addTo(detailMap)
-  }
+  const layers = { standard: detailMap._stdLayer, satellite: detailMap._satLayer }
+  Object.entries(layers).forEach(([k, l]) => detailMap.hasLayer(l) ? detailMap.removeLayer(l) : null)
+  detailMap.addLayer(layers[layer])
   detailMap.setView([lat, lng], 14)
   btn.closest('.map-toggle').querySelectorAll('button').forEach(b => b.classList.remove('active'))
   btn.classList.add('active')
-  setTimeout(() => detailMap.invalidateSize(), 300)
+  setTimeout(() => detailMap.invalidateSize(), 200)
 }
 
-/* ─── Payment method selector ─── */
+/* ─── Payment / Stripe ─── */
+const STRIPE_PUB_KEY = 'pk_test_51ToPkx7BE854Op1HE5LzApFazQv5VUiIZ0bMZRhgZCXVzDR0KFq5C2IRWczIMAhIaK53eh9fIpDH6ghUQHDieEOb00fzWlm6JN'
+let stripe = null, stripeCard = null, stripeInitReady = null
+
+function initStripe() {
+  if (!stripe) stripe = Stripe(STRIPE_PUB_KEY)
+  if (stripeCard) { stripeCard.unmount(); stripeCard = null }
+  const el = document.getElementById('stripeCardElement')
+  if (!el) return
+  const elements = stripe.elements()
+  stripeCard = elements.create('card', {
+    style: { base: { fontSize: '15px', color: '#222', fontFamily: '-apple-system,BlinkMacSystemFont,sans-serif', '::placeholder': { color: '#bbb' } } }
+  })
+  stripeCard.mount('#stripeCardElement')
+  stripeCard.on('change', ({ error }) => {
+    const errEl = document.getElementById('stripeCardError')
+    if (!errEl) return
+    if (error) { errEl.textContent = error.message; errEl.style.display = 'block' }
+    else { errEl.style.display = 'none' }
+  })
+}
+
+function togglePaymentSection(form) {
+  const ci = form.querySelector('[name="checkIn"]').value
+  const co = form.querySelector('[name="checkOut"]').value
+  const section = document.getElementById('paymentSection')
+  if (ci && co && co > ci) {
+    section.style.display = 'block'
+    if (!stripe) initStripe()
+  } else {
+    section.style.display = 'none'
+  }
+}
+
 function selectPayment(el, method) {
   el.closest('.payment-methods').querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'))
   el.classList.add('selected')
   el.closest('form').querySelector('[name="paymentMethod"]').value = method
+  const stripeSection = document.getElementById('stripeCardSection')
+  stripeSection.style.display = method === 'carte' ? 'block' : 'none'
+  if (method === 'carte' && stripeCard) stripeCard.mount('#stripeCardElement')
+}
+
+async function handleStripePayment(totalPrice, listingTitle) {
+  const result = await stripe.createPaymentMethod({ type: 'card', card: stripeCard, billing_details: { name: state.user?.name || '' } })
+  if (result.error) throw new Error(result.error.message)
+  const piRes = await fetch(`${API}/api/create-payment-intent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
+    body: JSON.stringify({ amount: Math.round(totalPrice * 100), paymentMethodId: result.paymentMethod.id, description: listingTitle })
+  })
+  const piData = await safeJson(piRes)
+  if (!piRes.ok) throw new Error(piData.error || 'Erreur de paiement')
+  const confirmResult = await stripe.confirmCardPayment(piData.clientSecret)
+  if (confirmResult.error) throw new Error(confirmResult.error.message)
+  return piData.paymentIntentId
 }
 
 /* ─── Auth modal ─── */
@@ -867,7 +928,10 @@ function toggleClientMode() {
 /* ─── Dropdown ─── */
 function toggleDropdown() { document.getElementById('dropdown').classList.toggle('open') }
 function closeDropdown() { document.getElementById('dropdown').classList.remove('open') }
-document.addEventListener('click', e => { if (!e.target.closest('.user-menu')) closeDropdown() })
+document.addEventListener('click', e => {
+  if (!e.target.closest('.user-menu')) closeDropdown()
+  if (!e.target.closest('[id="notifBtn"]') && !e.target.closest('#notifDropdown')) document.getElementById('notifDropdown')?.classList.remove('open')
+})
 
 /* ─── Modal ─── */
 function showModal(title, body, footer = '', wide = false, extraClass = '') {
@@ -888,6 +952,7 @@ document.getElementById('modalOverlay').addEventListener('click', e => { if (e.t
 /* ─── Home ─── */
 function home() {
   if (detailMap) { detailMap.remove(); detailMap = null }
+  if (stripeCard) { try { stripeCard.unmount() } catch {}; stripeCard = null }
   if (scrollSpyCleanup) { scrollSpyCleanup(); scrollSpyCleanup = null }
   state.currentCategory = null; state.currentSearch = ''
   const main = document.getElementById('main')
@@ -1183,21 +1248,26 @@ async function showListingDetail(id) {
               <form data-price="${l.price}" onsubmit="handleBooking(event, '${l.id}')">
                 <div class="date-picker">
                   <div class="date-row">
-                    <div class="date-field"><label>Arrivée</label><input type="date" name="checkIn" required min="${today}" onchange="updatePricePreview(this.form)"></div>
-                    <div class="date-field"><label>Départ</label><input type="date" name="checkOut" required min="${today}" onchange="updatePricePreview(this.form)"></div>
+                    <div class="date-field"><label>Arrivée</label><input type="date" name="checkIn" required min="${today}" onchange="updatePricePreview(this.form);togglePaymentSection(this.form)"></div>
+                    <div class="date-field"><label>Départ</label><input type="date" name="checkOut" required min="${today}" onchange="updatePricePreview(this.form);togglePaymentSection(this.form)"></div>
                   </div>
                 </div>
                 <div class="guest-field"><label>Voyageurs</label><select name="guests">${Array.from({length:l.guests||1},(_,i)=>`<option value="${i+1}">${i+1} voyageur${i>0?'s':''}</option>`).join('')}</select></div>
-                <label style="font-size:12px;font-weight:600;color:#999;display:block;margin-bottom:6px">MODE DE PAIEMENT</label>
-                <div class="payment-methods">
-                  <div class="payment-option selected" onclick="selectPayment(this,'carte')"><span class="pay-icon">💳</span>Carte</div>
-                  <div class="payment-option" onclick="selectPayment(this,'paypal')"><span class="pay-icon">🅿️</span>PayPal</div>
-                  <div class="payment-option" onclick="selectPayment(this,'virement')"><span class="pay-icon">🏦</span>Virement</div>
+                <div id="paymentSection" style="display:none">
+                  <label style="font-size:12px;font-weight:600;color:#999;display:block;margin-bottom:8px">MODE DE PAIEMENT</label>
+                  <div class="payment-methods" id="paymentMethods">
+                    <div class="payment-option selected" onclick="selectPayment(this,'carte')"><span class="pay-icon">💳</span>Carte bancaire</div>
+                    <div class="payment-option" onclick="selectPayment(this,'onsite')"><span class="pay-icon">💵</span>Paiement sur place</div>
+                  </div>
+                  <div id="stripeCardSection" style="margin-bottom:14px">
+                    <div id="stripeCardElement" style="padding:12px 14px;border:1.5px solid #ddd;border-radius:12px;background:#fff;transition:border-color .2s"></div>
+                    <div id="stripeCardError" style="font-size:13px;color:#ef4444;margin-top:6px;display:none"></div>
+                  </div>
+                  <input type="hidden" name="paymentMethod" value="carte">
                 </div>
-                <input type="hidden" name="paymentMethod" value="carte">
                 <div class="price-breakdown"><div class="price-breakdown-empty">Ajoutez vos dates pour obtenir le prix total</div></div>
-                <button type="submit" class="btn btn-primary btn-reserve">Réserver</button>
-                <p class="booking-note">Vous ne serez pas débité pour le moment</p>
+                <button type="submit" class="btn btn-primary btn-reserve" id="reserveBtn">Réserver</button>
+                <p class="booking-note">Aucun débit avant confirmation de l'hôte</p>
               </form>
             </div>
           </div>
@@ -1214,14 +1284,28 @@ async function handleBooking(e, listingId) {
   const fd = new FormData(e.target)
   const checkIn = fd.get('checkIn'); const checkOut = fd.get('checkOut')
   if (checkOut <= checkIn) { toast('Le départ doit être après l\'arrivée', 'error'); return }
+  const payMethod = fd.get('paymentMethod') || 'carte'
+  const btn = document.getElementById('reserveBtn')
+  btn.disabled = true; btn.textContent = 'Traitement en cours...'
+  let paymentIntentId = null
   try {
-    const r = await fetch(`${API}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ listingId, checkIn, checkOut, guests: Number(fd.get('guests'))||1, message: '', paymentMethod: fd.get('paymentMethod')||'carte' }) })
+    if (payMethod === 'carte') {
+      if (!stripe || !stripeCard) initStripe()
+      if (!stripeCard) throw new Error('Erreur de chargement du paiement')
+      const priceEl = document.querySelector('.price-breakdown .price-total span')
+      const total = priceEl ? parseFloat(priceEl.textContent) : 0
+      if (!total) throw new Error('Veuillez sélectionner vos dates')
+      paymentIntentId = await handleStripePayment(total, 'Réservation logement')
+      if (!paymentIntentId) throw new Error('Erreur de paiement')
+    }
+    const r = await fetch(`${API}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ listingId, checkIn, checkOut, guests: Number(fd.get('guests'))||1, message: '', paymentMethod: payMethod, paymentIntentId }) })
     const d = await safeJson(r)
     if (!r.ok) throw new Error(d.error || 'Erreur réservation')
     toast('✅ ' + d.message, 'success')
     document.getElementById('modalOverlay').classList.remove('open')
     document.body.style.overflow = ''
   } catch (err) { toast(err.message, 'error') }
+  btn.disabled = false; btn.textContent = 'Réserver'
 }
 
 /* ─── Host Dashboard ─── */
@@ -1229,6 +1313,7 @@ let hostTab = 'listings'
 
 function showHostDashboard() {
   if (detailMap) { detailMap.remove(); detailMap = null }
+  if (stripeCard) { try { stripeCard.unmount() } catch {}; stripeCard = null }
   if (scrollSpyCleanup) { scrollSpyCleanup(); scrollSpyCleanup = null }
   closeDropdown(); closeModal()
   const main = document.getElementById('main')
