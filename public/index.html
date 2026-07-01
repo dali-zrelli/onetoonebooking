@@ -129,70 +129,104 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 .modal-close{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .15s}
 .modal-close:hover{background:var(--bg)}
 
-/* ─── Listing detail (Airbnb style) ─── */
-.detail-page{padding:0}
-.detail-gallery-grid{display:grid;grid-template-columns:1.5fr 1fr;grid-template-rows:1fr 1fr;gap:4px;border-radius:12px;overflow:hidden;max-height:460px;margin:-24px -24px 24px -24px}
+/* ─── Listing Detail - Full Page ─── */
+/* Gallery - full width */
+.detail-gallery-wrapper{width:100%;background:#f7f7f7}
+.detail-gallery-grid{display:grid;grid-template-columns:1.5fr 1fr;grid-template-rows:1fr 1fr;gap:4px;max-height:520px}
 .detail-gallery-grid img{width:100%;height:100%;object-fit:cover;cursor:pointer;transition:transform .3s}
 .detail-gallery-grid img:hover{transform:scale(1.02)}
 .detail-hero-main{grid-row:1/3}
-.detail-hero-main img{height:460px}
+.detail-hero-main img{height:520px}
 .detail-side{display:grid;grid-template-rows:1fr 1fr;gap:4px;position:relative}
-.detail-side img{height:228px}
-.detail-more-btn{position:absolute;bottom:12px;right:12px;background:rgba(255,255,255,.9);color:#222;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;backdrop-filter:blur(4px);border:none;box-shadow:0 2px 6px rgba(0,0,0,.1);transition:all .2s}
+.detail-side img{height:258px}
+.detail-more-btn{position:absolute;bottom:16px;right:16px;background:rgba(255,255,255,.9);color:#222;padding:8px 16px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;backdrop-filter:blur(6px);border:none;box-shadow:0 2px 8px rgba(0,0,0,.12);transition:all .2s}
 .detail-more-btn:hover{background:#fff}
-.detail-single-img img{width:100%;max-height:420px;object-fit:cover;margin:-24px -24px 24px -24px;width:calc(100% + 48px);border-radius:0}
-.detail-body{display:flex;gap:48px}
-.detail-main{flex:1;min-width:0}
-.detail-sidebar{width:380px;flex-shrink:0}
-.detail-header{margin-bottom:16px}
-.detail-title{font-size:26px;font-weight:600;line-height:1.2;margin-bottom:6px}
-.detail-meta{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--text);flex-wrap:wrap}
-.detail-rating{font-weight:600}
-.detail-reviews{text-decoration:underline;cursor:pointer;font-weight:500}
-.detail-meta .dot{color:var(--text-light)}
-.detail-location{text-decoration:underline;cursor:pointer;font-weight:500}
-.detail-type-line{font-size:15px;color:var(--text);margin-top:6px}
-.detail-features{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:4px 0}
-.detail-feature{display:flex;align-items:center;gap:10px;font-size:15px}
-.feature-icon{font-size:20px;width:24px;text-align:center;flex-shrink:0}
-.detail-description p{font-size:15px;line-height:1.5;color:var(--text)}
-.detail-amenities-section h3,.detail-description h3,.detail-reviews-section h3{font-size:20px;font-weight:600;margin-bottom:16px}
-.detail-amenities-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.detail-amenity{font-size:15px;padding:4px 0}
-.detail-divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+.detail-single-img img{width:100%;max-height:520px;object-fit:cover}
 
-/* Booking card */
-.booking-card{border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:0 6px 20px rgba(0,0,0,.08);position:sticky;top:80px}
+/* Content container */
+.listing-detail-page{max-width:1120px;margin:0 auto;padding:0 24px 80px}
+.detail-container{display:flex;gap:64px;padding-top:32px}
+.detail-left{flex:1;min-width:0}
+.detail-right{width:380px;flex-shrink:0}
+
+/* Header section */
+.detail-title{font-size:28px;font-weight:600;line-height:1.2;margin-bottom:8px}
+.detail-meta{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--text);flex-wrap:wrap;margin-bottom:6px}
+.detail-meta .dot{color:#ddd}
+.detail-location{font-weight:500;text-decoration:underline;cursor:pointer}
+
+/* Host bar + key details (top section) */
+.detail-host-bar{display:flex;align-items:center;justify-content:space-between;padding:24px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:16px}
+.host-info-row{display:flex;align-items:center;gap:14px}
+.host-avatar-md{width:48px;height:48px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;flex-shrink:0}
+.host-name-md{font-weight:600;font-size:16px}
+.host-sub-md{font-size:14px;color:var(--text-light)}
+.detail-features{display:flex;gap:24px;flex-wrap:wrap}
+.detail-feature{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--text)}
+
+/* Sticky section nav */
+.detail-section-nav{display:flex;border-bottom:1px solid var(--border);background:#fff;position:sticky;top:64px;z-index:10;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.detail-section-nav::-webkit-scrollbar{display:none}
+.detail-section-nav a{padding:16px 0;margin-right:28px;font-size:14px;font-weight:500;color:#717171;text-decoration:none;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.detail-section-nav a:hover{color:var(--text)}
+.detail-section-nav a.active{color:var(--text);border-bottom-color:var(--text)}
+
+/* Sections */
+.detail-section{padding:32px 0;border-bottom:1px solid var(--border);scroll-margin-top:128px}
+.detail-section:last-child{border-bottom:none}
+.detail-section h2{font-size:22px;font-weight:600;margin-bottom:20px}
+.detail-section p{font-size:15px;line-height:1.6;color:var(--text)}
+
+/* Amenities grid */
+.amenities-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.amenity-item{font-size:15px;padding:4px 0}
+
+/* Reviews */
+.reviews-list{display:flex;flex-direction:column;gap:20px}
+.review-card{display:flex;gap:14px}
+.review-avatar{width:44px;height:44px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;flex-shrink:0}
+.review-name{font-weight:600;font-size:15px}
+.review-date{font-size:13px;color:var(--text-light);margin-bottom:4px}
+.review-stars{color:var(--primary);font-size:13px;letter-spacing:1px}
+.review-text{font-size:14px;margin-top:6px;line-height:1.5;color:var(--text)}
+
+/* Map */
+.map-container{border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.map-container iframe{display:block;width:100%;height:400px}
+
+/* Host detail card */
+.host-detail-card{display:flex;gap:24px;align-items:flex-start}
+.host-detail-avatar{width:80px;height:80px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:600;flex-shrink:0}
+.host-detail-info .host-name-lg{font-size:22px;font-weight:600;margin-bottom:4px}
+.host-detail-info .host-meta{font-size:14px;color:var(--text-light);margin-bottom:8px}
+.host-badge{display:flex;align-items:center;gap:6px;font-size:14px;margin-bottom:4px}
+
+/* Booking card sidebar */
+.booking-card{border:1px solid var(--border);border-radius:12px;padding:24px;box-shadow:0 6px 20px rgba(0,0,0,.08);position:sticky;top:120px}
 .booking-card .price-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
 .booking-card .price-amount{font-size:22px;font-weight:700}
 .booking-card .price-night{font-size:15px;color:var(--text-light);font-weight:400}
 .booking-card .price-rating{font-size:15px;font-weight:500}
+
 .date-picker{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
-.date-picker-row{display:flex}
-.date-picker-row:first-child{border-bottom:1px solid var(--border)}
+.date-row{display:flex}
+.date-row:first-child{border-bottom:1px solid var(--border)}
 .date-field{flex:1;padding:10px 14px}
 .date-field:first-child{border-right:1px solid var(--border)}
 .date-field label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-light);margin-bottom:2px}
 .date-field input,.guest-field select{width:100%;border:none;padding:4px 0;font-size:14px;font-weight:500;color:var(--text);background:transparent;outline:none;font-family:inherit}
+
 .guest-field{border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px}
 .guest-field label{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text-light);margin-bottom:2px}
 .guest-field select{padding:0;cursor:pointer;width:100%}
+
 .btn-reserve{width:100%;padding:14px;font-size:16px;font-weight:600;border-radius:8px}
 .booking-note{text-align:center;font-size:12px;color:var(--text-light);margin-top:10px}
+
 .price-breakdown{font-size:14px;margin-top:16px}
 .price-breakdown .price-line{display:flex;justify-content:space-between;margin-bottom:8px;padding:0}
-.price-breakdown .price-line a{color:var(--text);text-decoration:underline;cursor:pointer}
 .price-breakdown .price-total{display:flex;justify-content:space-between;font-weight:700;font-size:16px;padding-top:14px;border-top:1px solid var(--border);margin-top:4px}
 .price-breakdown-empty{text-align:center;font-size:13px;color:var(--text-light);padding:12px 0 4px}
-
-/* Reviews */
-.detail-reviews-list{display:flex;flex-direction:column;gap:16px}
-.detail-review{display:flex;gap:12px}
-.review-avatar{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;flex-shrink:0}
-.review-name{font-weight:600;font-size:14px}
-.review-date{font-size:12px;color:var(--text-light);margin-bottom:4px}
-.review-rating{color:var(--primary);font-size:13px;letter-spacing:1px}
-.review-comment{font-size:14px;margin-top:4px;line-height:1.4;color:var(--text)}
 
 /* ─── Auth ─── */
 .auth-form{display:flex;flex-direction:column;gap:14px}
@@ -275,18 +309,22 @@ main{max-width:1440px;margin:0 auto;padding:24px}
   .listings-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
   .mobile-search{display:block}
   .hero .search-box{display:none}
-  .detail-gallery-grid{grid-template-columns:1fr;max-height:none;margin:-16px -16px 16px -16px}
-  .detail-gallery-grid img{height:220px!important}
+  .detail-gallery-grid{grid-template-columns:1fr;grid-template-rows:auto;max-height:none}
+  .detail-gallery-grid img,.detail-hero-main img,.detail-side img{height:220px!important}
   .detail-hero-main{grid-row:auto}
   .detail-side{display:none}
-  .detail-single-img img{max-height:260px;margin:-16px -16px 16px -16px;width:calc(100% + 32px)}
-  .detail-body{flex-direction:column;gap:24px}
-  .detail-sidebar{width:100%}
+  .detail-single-img img{max-height:260px}
+  .listing-detail-page{padding:0 16px 60px}
+  .detail-container{flex-direction:column;gap:24px;padding-top:20px}
+  .detail-right{width:100%}
   .booking-card{position:static;box-shadow:none;border:1px solid var(--border)}
+  .detail-section-nav{top:0;margin:0 -16px;padding:0 16px}
   .detail-title{font-size:22px}
-  .detail-features{grid-template-columns:1fr 1fr;gap:12px}
-  .detail-amenities-grid{grid-template-columns:1fr}
-  .detail-divider{margin:18px 0}
+  .detail-features{gap:16px}
+  .amenities-grid{grid-template-columns:1fr}
+  .host-detail-card{flex-direction:column;align-items:center;text-align:center}
+  .detail-host-bar{flex-direction:column;align-items:flex-start}
+  .detail-section{scroll-margin-top:60px}
   .host-stats{grid-template-columns:repeat(2,1fr)}
   .editor-grid{grid-template-columns:1fr}
   .room-config{grid-template-columns:repeat(2,1fr)}
@@ -560,6 +598,7 @@ document.getElementById('modalOverlay').addEventListener('click', e => { if (e.t
 
 /* ─── Home ─── */
 function home() {
+  if (scrollSpyCleanup) { scrollSpyCleanup(); scrollSpyCleanup = null }
   state.currentCategory = null; state.currentSearch = ''
   const main = document.getElementById('main')
   main.innerHTML = `
@@ -654,48 +693,52 @@ async function loadListings() {
 
 let currentDetailListing = null
 
-function buildGalleryHtml(images, title) {
-  const count = images?.length || 0
-  const fallback = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688'
-  if (!count) return `<div class="detail-single-img"><img src="${fallback}?w=1000&h=500&fit=crop" alt="${title}"></div>`
-  if (count === 1) return `<div class="detail-single-img"><img src="${images[0]}" alt="${title}"></div>`
-  if (count === 2) return `<div class="detail-gallery-grid">
-    <div class="detail-hero-main"><img src="${images[0]}" alt="${title}"></div>
-    <div class="detail-side"><img src="${images[1]}" alt="${title}"></div>
-  </div>`
-  return `<div class="detail-gallery-grid">
-    <div class="detail-hero-main"><img src="${images[0]}" alt="${title}"></div>
-    <div class="detail-side">
-      <img src="${images[1]}" alt="${title}">
-      <img src="${images[2]}" alt="${title}">
-      ${count > 3 ? `<div class="detail-more-btn" onclick="showAllPhotos('${encodeURIComponent(JSON.stringify(images))}')">${count-3}+ photos</div>` : ''}
-    </div>
-  </div>`
+function galleryHtml(images, title) {
+  const c = images?.length || 0
+  const fb = 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688'
+  if (!c) return `<div class="detail-single-img"><img src="${fb}?w=1200&h=600&fit=crop" alt="${title}"></div>`
+  if (c === 1) return `<div class="detail-single-img"><img src="${images[0]}" alt="${title}"></div>`
+  if (c === 2) return `<div class="detail-gallery-grid"><div class="detail-hero-main"><img src="${images[0]}" alt="${title}"></div><div class="detail-side"><img src="${images[1]}" alt="${title}"></div></div>`
+  return `<div class="detail-gallery-grid"><div class="detail-hero-main"><img src="${images[0]}" alt="${title}"></div><div class="detail-side"><img src="${images[1]}" alt="${title}"><img src="${images[2]}" alt="${title}">${c>3?`<div class="detail-more-btn" onclick="showAllPhotos(${c})">Afficher toutes les photos</div>`:''}</div></div>`
 }
 
-function showAllPhotos(json) {
-  const images = JSON.parse(decodeURIComponent(json))
-  showModal('Toutes les photos', `<div style="display:flex;flex-direction:column;gap:12px">${images.map(u => `<img src="${u}" style="width:100%;border-radius:8px">`).join('')}</div>`, '', true)
+function showAllPhotos(idx) {
+  const l = currentDetailListing
+  if (!l?.images?.length) return
+  showModal('Toutes les photos', `<div style="display:flex;flex-direction:column;gap:12px">${l.images.map(u => `<img src="${u}" style="width:100%;border-radius:8px">`).join('')}</div>`)
+}
+
+let scrollSpyCleanup = null
+function setupScrollSpy() {
+  if (scrollSpyCleanup) { scrollSpyCleanup(); scrollSpyCleanup = null }
+  const nav = document.getElementById('sectionNav')
+  if (!nav) return
+  const links = nav.querySelectorAll('a')
+  const sections = document.querySelectorAll('.detail-section')
+  if (!sections.length) return
+  const check = () => {
+    let cur = ''
+    sections.forEach(s => { if (s.getBoundingClientRect().top <= 140) cur = s.id })
+    links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + cur))
+  }
+  window.addEventListener('scroll', check, { passive: true })
+  scrollSpyCleanup = () => window.removeEventListener('scroll', check)
+  check()
 }
 
 function updatePricePreview(form) {
-  const checkIn = form.querySelector('[name="checkIn"]').value
-  const checkOut = form.querySelector('[name="checkOut"]').value
-  const price = parseFloat(form.dataset.price)
+  const ci = form.querySelector('[name="checkIn"]').value
+  const co = form.querySelector('[name="checkOut"]').value
+  const p = parseFloat(form.dataset.price)
   const el = form.querySelector('.price-breakdown')
-  if (!checkIn || !checkOut || !price || checkOut <= checkIn) {
+  if (!ci || !co || !p || co <= ci) {
     if (el) el.innerHTML = '<div class="price-breakdown-empty">Ajoutez vos dates pour obtenir le prix total</div>'
     return
   }
-  const nights = Math.round((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24))
-  const subtotal = nights * price
-  const serviceFee = Math.round(subtotal * 0.12)
-  const total = subtotal + serviceFee
-  el.innerHTML = `
-    <div class="price-line">${price}€ × ${nights} ${nights > 1 ? 'nuits' : 'nuit'} <span>${subtotal}€</span></div>
-    <div class="price-line">Frais de service <span>${serviceFee}€</span></div>
-    <div class="price-total">Total <span>${total}€</span></div>
-  `
+  const n = Math.round((new Date(co) - new Date(ci)) / 864e5)
+  const sub = n * p
+  const fee = Math.round(sub * 0.12)
+  el.innerHTML = `<div class="price-line">${p}€ × ${n} ${n>1?'nuits':'nuit'} <span>${sub}€</span></div><div class="price-line">Frais de service <span>${fee}€</span></div><div class="price-total">Total <span>${sub+fee}€</span></div>`
 }
 
 async function showListingDetail(id) {
@@ -703,125 +746,128 @@ async function showListingDetail(id) {
     const r = await fetch(`${API}/api/listings/${id}`)
     const l = await safeJson(r)
     currentDetailListing = l
-    const images = l.images || []
-    const galleryHtml = buildGalleryHtml(images, l.title)
     const today = new Date().toISOString().split('T')[0]
+    document.getElementById('modalOverlay').classList.remove('open')
+    document.body.style.overflow = ''
+    const main = document.getElementById('main')
+    window.scrollTo(0, 0)
 
     const features = [
-      { icon: '👤', count: l.guests, label: 'voyageur' + (l.guests > 1 ? 's' : '') },
-      { icon: '🛏️', count: l.bedrooms, label: 'chambre' + (l.bedrooms > 1 ? 's' : '') },
-      { icon: '🛌', count: l.beds, label: 'lit' + (l.beds > 1 ? 's' : '') },
-      { icon: '🛁', count: l.baths, label: 'salle de bain' + (l.baths > 1 ? 's' : '') }
-    ].filter(f => f.count > 0)
+      { icon: '👤', t: `${l.guests} voyageur${l.guests>1?'s':''}` },
+      { icon: '🛏️', t: `${l.bedrooms} chambre${l.bedrooms>1?'s':''}` },
+      { icon: '🛌', t: `${l.beds} lit${l.beds>1?'s':''}` },
+      { icon: '🛁', t: `${l.baths} salle de bain${l.baths>1?'s':''}` }
+    ].filter(f => parseInt(f.t) > 0)
 
-    const amenitiesHtml = l.amenities?.length
-      ? l.amenities.map(a => `<div class="detail-amenity">✓ ${a}</div>`).join('')
-      : ''
+    const hostSince = l.hostSince ? new Date(l.hostSince).getFullYear() : null
+    const hostYears = hostSince ? new Date().getFullYear() - hostSince : null
 
-    const reviewsHtml = l.reviews?.length
-      ? l.reviews.slice(0, 5).map(r => `
-        <div class="detail-review">
-          <div class="review-avatar">${(r.userName || '?').charAt(0)}</div>
-          <div>
-            <div class="review-name">${r.userName || 'Anonyme'}</div>
-            <div class="review-date">${formatDate(r.createdAt)}</div>
-            <div class="review-rating">${'★'.repeat(Math.round(r.rating))}${'☆'.repeat(5 - Math.round(r.rating))}</div>
-            ${r.comment ? `<p class="review-comment">${r.comment}</p>` : ''}
-          </div>
-        </div>
-      `).join('')
-      : ''
-
-    const guestOptions = Array.from({length: l.guests || 1}, (_, i) =>
-      `<option value="${i+1}">${i+1} voyageur${i > 0 ? 's' : ''}</option>`
-    ).join('')
-
-    const bodyHtml = `
-      ${galleryHtml}
-      <div class="detail-body">
-        <div class="detail-main">
-          <div class="detail-header">
-            <h1 class="detail-title">${l.title}</h1>
-            <div class="detail-meta">
-              <span class="detail-rating">★ ${l.rating}</span>
-              <span class="detail-reviews" onclick="document.querySelector('.detail-reviews-section')?.scrollIntoView({behavior:'smooth'})">${l.reviewCount} avis</span>
-              <span class="dot">·</span>
-              <span class="detail-location">${l.city}, ${l.country}</span>
-            </div>
-            <div class="detail-type-line">${l.type} · hébergé par ${l.hostName}${l.superhost ? ' · Superhost' : ''}</div>
-          </div>
-
-          <hr class="detail-divider">
-
-          <div class="detail-features">
-            ${features.map(f => `
-              <div class="detail-feature">
-                <span class="feature-icon">${f.icon}</span>
-                <span>${f.count} ${f.label}</span>
+    main.innerHTML = `
+      <div class="detail-gallery-wrapper">${galleryHtml(l.images, l.title)}</div>
+      <div class="listing-detail-page">
+        <div class="detail-container">
+          <div class="detail-left">
+            <div class="detail-header">
+              <h1 class="detail-title">${l.title}</h1>
+              <div class="detail-meta">
+                <strong>★ ${l.rating}</strong>
+                <span class="dot">·</span>
+                <a href="#section-reviews" onclick="document.getElementById('section-reviews').scrollIntoView({behavior:'smooth'})" style="text-decoration:underline;cursor:pointer;font-weight:500">${l.reviewCount} avis</a>
+                <span class="dot">·</span>
+                <span class="detail-location" onclick="document.getElementById('section-location').scrollIntoView({behavior:'smooth'})">${l.city}, ${l.country}</span>
               </div>
-            `).join('')}
-          </div>
-
-          <hr class="detail-divider">
-
-          <div class="detail-description">
-            <h3>Description</h3>
-            <p>${(l.description || 'Logement confortable et bien situé.').split('\n').join('<br>')}</p>
-          </div>
-
-          ${amenitiesHtml ? `
-            <hr class="detail-divider">
-            <div class="detail-amenities-section">
-              <h3>Équipements</h3>
-              <div class="detail-amenities-grid">${amenitiesHtml}</div>
             </div>
-          ` : ''}
 
-          ${reviewsHtml ? `
-            <hr class="detail-divider">
-            <div class="detail-reviews-section">
-              <h3>★ ${l.rating} · ${l.reviewCount} avis</h3>
-              <div class="detail-reviews-list">${reviewsHtml}</div>
-            </div>
-          ` : ''}
-        </div>
-
-        <div class="detail-sidebar">
-          <div class="booking-card">
-            <div class="price-row">
-              <div>
-                <span class="price-amount">${l.price}€</span>
-                <span class="price-night">/ nuit</span>
-              </div>
-              <span class="price-rating">★ ${l.rating}</span>
-            </div>
-            <form class="booking-form" data-price="${l.price}" onsubmit="handleBooking(event, '${l.id}')">
-              <div class="date-picker">
-                <div class="date-picker-row">
-                  <div class="date-field">
-                    <label>Arrivée</label>
-                    <input type="date" name="checkIn" required min="${today}" onchange="updatePricePreview(this.form)">
-                  </div>
-                  <div class="date-field">
-                    <label>Départ</label>
-                    <input type="date" name="checkOut" required min="${today}" onchange="updatePricePreview(this.form)">
-                  </div>
+            <div class="detail-host-bar">
+              <div class="host-info-row" onclick="document.getElementById('section-host').scrollIntoView({behavior:'smooth'})" style="cursor:pointer">
+                <div class="host-avatar-md">${(l.hostName||'H').charAt(0)}</div>
+                <div>
+                  <div class="host-name-md">Hébergé par ${l.hostName}</div>
+                  <div class="host-sub-md">${hostYears?hostYears+' ans d\'expérience · ':''}${l.superhost?'Superhost · ':''}${l.reviewCount} avis</div>
                 </div>
               </div>
-              <div class="guest-field">
-                <label>Voyageurs</label>
-                <select name="guests">${guestOptions}</select>
+              <div class="detail-features">${features.map(f => `<div class="detail-feature"><span>${f.icon}</span><span>${f.t}</span></div>`).join('')}</div>
+            </div>
+
+            <nav class="detail-section-nav" id="sectionNav">
+              <a href="#section-description" class="active">Aperçu</a>
+              <a href="#section-amenities">Équipements</a>
+              <a href="#section-reviews">Avis</a>
+              <a href="#section-location">Emplacement</a>
+              <a href="#section-host">Hôte</a>
+            </nav>
+
+            <section class="detail-section" id="section-description">
+              <h2>À propos de ce logement</h2>
+              <p>${(l.description || 'Logement confortable et bien situé.').split('\n').join('<br>')}</p>
+            </section>
+
+            ${l.amenities?.length ? `
+            <section class="detail-section" id="section-amenities">
+              <h2>Équipements</h2>
+              <div class="amenities-grid">${l.amenities.map(a => `<div class="amenity-item">✓ ${a}</div>`).join('')}</div>
+            </section>` : ''}
+
+            ${l.reviews?.length ? `
+            <section class="detail-section" id="section-reviews">
+              <h2>★ ${l.rating} · ${l.reviewCount} avis</h2>
+              <div class="reviews-list">${l.reviews.slice(0,5).map(r => `
+                <div class="review-card">
+                  <div class="review-avatar">${(r.userName||'?').charAt(0)}</div>
+                  <div>
+                    <div class="review-name">${r.userName||'Anonyme'}</div>
+                    <div class="review-date">${formatDate(r.createdAt)}</div>
+                    <div class="review-stars">${'★'.repeat(Math.round(r.rating))}${'☆'.repeat(5-Math.round(r.rating))}</div>
+                    ${r.comment ? `<p class="review-text">${r.comment}</p>` : ''}
+                  </div>
+                </div>`).join('')}</div>
+            </section>` : ''}
+
+            <section class="detail-section" id="section-location">
+              <h2>Emplacement</h2>
+              <p style="margin-bottom:12px">${l.city}, ${l.country}</p>
+              <div class="map-container">
+                <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${(l.lng||2.333)-0.03}%2C${(l.lat||48.85)-0.02}%2C${(l.lng||2.333)+0.03}%2C${(l.lat||48.85)+0.02}&amp;layer=mapnik&amp;marker=${l.lat||48.85}%2C${l.lng||2.333}" loading="lazy"></iframe>
               </div>
-              <div class="price-breakdown"><div class="price-breakdown-empty">Ajoutez vos dates pour obtenir le prix total</div></div>
-              <button type="submit" class="btn btn-primary btn-reserve">Réserver</button>
-              <p class="booking-note">Vous ne serez pas débité pour le moment</p>
-            </form>
+            </section>
+
+            <section class="detail-section" id="section-host">
+              <h2>Faites connaissance avec votre hôte</h2>
+              <div class="host-detail-card">
+                <div class="host-detail-avatar">${(l.hostName||'H').charAt(0)}</div>
+                <div class="host-detail-info">
+                  <div class="host-name-lg">${l.hostName}</div>
+                  <div class="host-meta">${hostYears?'Hôte depuis '+hostYears:''}</div>
+                  ${l.superhost ? '<div class="host-badge">★ Superhost</div>' : ''}
+                  <div class="host-meta">${l.reviewCount} avis</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div class="detail-right">
+            <div class="booking-card">
+              <div class="price-row">
+                <div><span class="price-amount">${l.price}€</span> <span class="price-night">/ nuit</span></div>
+                <span class="price-rating">★ ${l.rating}</span>
+              </div>
+              <form data-price="${l.price}" onsubmit="handleBooking(event, '${l.id}')">
+                <div class="date-picker">
+                  <div class="date-row">
+                    <div class="date-field"><label>Arrivée</label><input type="date" name="checkIn" required min="${today}" onchange="updatePricePreview(this.form)"></div>
+                    <div class="date-field"><label>Départ</label><input type="date" name="checkOut" required min="${today}" onchange="updatePricePreview(this.form)"></div>
+                  </div>
+                </div>
+                <div class="guest-field"><label>Voyageurs</label><select name="guests">${Array.from({length:l.guests||1},(_,i)=>`<option value="${i+1}">${i+1} voyageur${i>0?'s':''}</option>`).join('')}</select></div>
+                <div class="price-breakdown"><div class="price-breakdown-empty">Ajoutez vos dates pour obtenir le prix total</div></div>
+                <button type="submit" class="btn btn-primary btn-reserve">Réserver</button>
+                <p class="booking-note">Vous ne serez pas débité pour le moment</p>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
-    `
-
-    showModal('', bodyHtml, '', true, 'modal-xl')
+      </div>`
+    setupScrollSpy()
   } catch (err) { toast(err.message, 'error') }
 }
 
@@ -836,7 +882,8 @@ async function handleBooking(e, listingId) {
     const d = await safeJson(r)
     if (!r.ok) throw new Error(d.error || 'Erreur réservation')
     toast(d.message, 'success')
-    closeModal()
+    document.getElementById('modalOverlay').classList.remove('open')
+    document.body.style.overflow = ''
   } catch (err) { toast(err.message, 'error') }
 }
 
@@ -844,6 +891,7 @@ async function handleBooking(e, listingId) {
 let hostTab = 'listings'
 
 function showHostDashboard() {
+  if (scrollSpyCleanup) { scrollSpyCleanup(); scrollSpyCleanup = null }
   closeDropdown(); closeModal()
   const main = document.getElementById('main')
   main.innerHTML = `
