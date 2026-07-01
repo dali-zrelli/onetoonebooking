@@ -127,6 +127,12 @@ const CASE_MAP = {
   guestemail:'guestEmail', listingprice:'listingPrice',
   bookingcount:'bookingCount',
   verificationtoken:'verificationToken',
+  senderid:'senderId', receiverid:'receiverId',
+  sendername:'senderName', listingtitle:'listingTitle',
+  otherid:'otherId', othername:'otherName',
+  lastmessage:'lastMessage',
+  paymentmethod:'paymentMethod', paymentstatus:'paymentStatus',
+  relatedid:'relatedId',
 }
 
 function fixCase(obj) {
@@ -324,7 +330,7 @@ app.delete('/api/listings/:id', auth, async (req, res) => {
 /* ─── Bookings ─── */
 app.post('/api/bookings', auth, async (req, res) => {
   try {
-    const { listingId, checkIn, checkOut, guests, message } = req.body
+    const { listingId, checkIn, checkOut, guests, message, paymentMethod } = req.body
     const raw = await queryOne('SELECT l.*, u.name as hostName, u.email as hostEmail FROM listings l JOIN users u ON l.hostId = u.id WHERE l.id = ? AND l.active = 1', [listingId])
     if (!raw) return res.status(404).json({ error: 'Logement non trouvé' })
     const listing = fixCase(raw)
@@ -334,11 +340,14 @@ app.post('/api/bookings', auth, async (req, res) => {
     if (existing) return res.status(409).json({ error: 'Ces dates sont déjà réservées' })
     const nights = Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
     const id = uuidv4()
-    await run('INSERT INTO bookings (id,listingId,userId,checkIn,checkOut,guests,totalPrice,nights,status,message) VALUES (?,?,?,?,?,?,?,?,\'en_attente\',?)',
-      [id, listingId, req.user.id, checkIn, checkOut, guests || 1, listing.price * nights, nights, message || ''])
+    const pm = paymentMethod || 'carte'
+    await run('INSERT INTO bookings (id,listingId,userId,checkIn,checkOut,guests,totalPrice,nights,status,message,paymentMethod,paymentStatus) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
+      [id, listingId, req.user.id, checkIn, checkOut, guests || 1, listing.price * nights, nights, 'en_attente', message || '', pm, 'en_attente'])
+    await run('INSERT INTO notifications (userId, type, title, message, relatedId) VALUES (?,?,?,?,?)',
+      [listing.hostId, 'booking', 'Nouvelle réservation', `${req.user.name} souhaite réserver ${listing.title}`, id])
     const fd = (d) => new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
     mail.sendBookingRequestEmail(listing.hostEmail, listing.hostName, req.user.name, listing.title, fd(checkIn), fd(checkOut), nights, listing.price * nights, message).catch(e => console.error('Mail error:', e.message))
-    res.json({ id, totalPrice: listing.price * nights, nights, status: 'en_attente', message: 'Demande envoyée ! En attente de confirmation.' })
+    res.json({ id, totalPrice: listing.price * nights, nights, status: 'en_attente', paymentMethod: pm, message: 'Demande envoyée ! En attente de confirmation.' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
@@ -357,7 +366,9 @@ app.put('/api/bookings/:id/status', auth, async (req, res) => {
     if (!raw) return res.status(404).json({ error: 'Réservation non trouvée' })
     const booking = fixCase(raw)
     if (booking.hostId !== req.user.id && booking.userId !== req.user.id) return res.status(403).json({ error: 'Non autorisé' })
-    await run('UPDATE bookings SET status = ? WHERE id = ?', [status, req.params.id])
+    await run('UPDATE bookings SET status = ?, paymentStatus = CASE WHEN ? = \'confirmé\' THEN \'payé\' ELSE paymentStatus END WHERE id = ?', [status, status, req.params.id])
+    await run('INSERT INTO notifications (userId, type, title, message, relatedId) VALUES (?,?,?,?,?)',
+      [booking.userId, 'booking', 'Réservation ' + status, `Votre réservation pour ${booking.listingTitle} a été ${status}`, req.params.id])
     queryOne('SELECT name, email FROM users WHERE id = ?', [booking.userId]).then(guest => {
       const fd = (d) => new Date(d).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' })
       mail.sendBookingStatusEmail(guest.email, guest.name, booking.listingTitle, status, fd(booking.checkIn), fd(booking.checkOut), booking.totalPrice).catch(e => console.error('Mail error:', e.message))
@@ -407,6 +418,72 @@ app.get('/api/host/stats', auth, async (req, res) => {
     const totalRevenue = (await queryOne('SELECT COALESCE(SUM(b.totalPrice),0) as s FROM bookings b JOIN listings l ON b.listingId = l.id WHERE l.hostId = ? AND b.status = \'confirmé\'', [req.user.id])).s
     const pendingCount = (await queryOne('SELECT COUNT(*)::int as c FROM bookings b JOIN listings l ON b.listingId = l.id WHERE l.hostId = ? AND b.status = \'en_attente\'', [req.user.id])).c
     res.json({ listingCount, bookingCount, confirmedCount, totalRevenue: Number(totalRevenue), pendingCount })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+/* ─── Messages / Chat ─── */
+app.post('/api/messages', auth, async (req, res) => {
+  try {
+    const { listingId, receiverId, content } = req.body
+    if (!listingId || !receiverId || !content) return res.status(400).json({ error: 'Champs requis' })
+    await run('INSERT INTO messages (listingId, senderId, receiverId, content) VALUES (?,?,?,?)', [listingId, req.user.id, receiverId, content])
+    await run('INSERT INTO notifications (userId, type, title, message, relatedId) VALUES (?,?,?,?,?)',
+      [receiverId, 'message', 'Nouveau message', `${req.user.name} vous a envoyé un message`, listingId])
+    res.json({ message: 'Message envoyé' })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+app.get('/api/messages/:listingId/:otherId', auth, async (req, res) => {
+  try {
+    const rows = await query(
+      'SELECT m.*, u.name as senderName FROM messages m JOIN users u ON m.senderId = u.id WHERE m.listingId = ? AND ((m.senderId = ? AND m.receiverId = ?) OR (m.senderId = ? AND m.receiverId = ?)) ORDER BY m.createdAt ASC',
+      [req.params.listingId, req.user.id, req.params.otherId, req.params.otherId, req.user.id])
+    await run('UPDATE messages SET read = true WHERE listingId = ? AND receiverId = ? AND read = false', [req.params.listingId, req.user.id])
+    res.json(rows.map(fixCase))
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+app.get('/api/conversations', auth, async (req, res) => {
+  try {
+    const rows = await query(
+      `SELECT DISTINCT ON (m.listingId, LEAST(m.senderId, m.receiverId), GREATEST(m.senderId, m.receiverId))
+        m.listingId, l.title as listingTitle, l.images,
+        CASE WHEN m.senderId = ? THEN m.receiverId ELSE m.senderId END as otherId,
+        CASE WHEN m.senderId = ? THEN u2.name ELSE u1.name END as otherName,
+        (SELECT content FROM messages m2 WHERE m2.listingId = m.listingId AND ((m2.senderId = ? AND m2.receiverId = ?) OR (m2.senderId = ? AND m2.receiverId = ?)) ORDER BY m2.createdAt DESC LIMIT 1) as lastMessage,
+        (SELECT COUNT(*)::int FROM messages WHERE listingId = m.listingId AND receiverId = ? AND read = false) as unread
+       FROM messages m
+       JOIN users u1 ON m.senderId = u1.id
+       JOIN users u2 ON m.receiverId = u2.id
+       JOIN listings l ON m.listingId = l.id
+       WHERE m.senderId = ? OR m.receiverId = ?
+       ORDER BY m.listingId, LEAST(m.senderId, m.receiverId), GREATEST(m.senderId, m.receiverId), m.createdAt DESC`,
+      [req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id, req.user.id])
+    res.json(rows.map(r => fixCase({ ...r, images: r.images ? r.images.split('|')[0] : '' })))
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+/* ─── Notifications ─── */
+app.get('/api/notifications', auth, async (req, res) => {
+  try {
+    const rows = await query('SELECT * FROM notifications WHERE userId = ? ORDER BY createdAt DESC LIMIT 50', [req.user.id])
+    res.json(rows.map(fixCase))
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+app.get('/api/notifications/unread-count', auth, async (req, res) => {
+  try {
+    const r = await queryOne('SELECT COUNT(*)::int as c FROM notifications WHERE userId = ? AND read = false', [req.user.id])
+    res.json({ count: r.c })
+  } catch (e) { res.status(500).json({ error: e.message }) }
+})
+
+app.post('/api/notifications/read', auth, async (req, res) => {
+  try {
+    const { id } = req.body
+    if (id) { await run('UPDATE notifications SET read = true WHERE id = ? AND userId = ?', [id, req.user.id]) }
+    else { await run('UPDATE notifications SET read = true WHERE userId = ?', [req.user.id]) }
+    res.json({ message: 'Notifications marquées comme lues' })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 

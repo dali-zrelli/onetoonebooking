@@ -6,6 +6,7 @@
 <title>ONETOONE.booking - Réservation de logements</title>
 <link rel="icon" type="image/png" href="/icon-header-2.png">
 <link rel="apple-touch-icon" href="/icon-header-2.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 <style>
 :root {
   --primary: #ff385c; --primary-dark: #e31c5f;
@@ -198,7 +199,7 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 .review-text{font-size:14px;margin-top:8px;line-height:1.6;color:#444}
 
 /* Map */
-.map-container{border-radius:14px;overflow:hidden;border:1px solid #e8e8e8;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.map-container{border-radius:14px;overflow:hidden;border:1px solid #e8e8e8;box-shadow:0 2px 8px rgba(0,0,0,.04);height:400px;width:100%}
 .map-container iframe{display:block;width:100%;height:400px}
 
 /* Host detail card */
@@ -351,6 +352,10 @@ main{max-width:1440px;margin:0 auto;padding:24px}
   .host-table{font-size:12px}
   .host-table th,.host-table td{padding:8px 6px}
   .section-header h2{font-size:20px}
+  .chat-modal{flex-direction:column}
+  .chat-conversations{width:100%;border-right:none;border-bottom:1px solid var(--border);padding:0 0 8px;max-height:140px}
+  .notif-dropdown{min-width:280px;right:-60px}
+  .map-container{height:260px}
 }
 
 /* ─── Toast ─── */
@@ -361,6 +366,63 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 .toast.success{background:#10b981}
 .toast.error{background:#ef4444}
 .toast.info{background:var(--primary)}
+
+/* ─── Notifications ─── */
+.notif-btn{position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;font-size:20px;transition:background .2s}
+.notif-btn:hover{background:var(--bg)}
+.notif-badge{position:absolute;top:2px;right:2px;background:var(--primary);color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+.notif-dropdown{position:absolute;top:calc(100% + 10px);right:0;background:#fff;border-radius:16px;box-shadow:0 4px 28px rgba(0,0,0,.14);min-width:340px;max-height:420px;overflow-y:auto;opacity:0;visibility:hidden;transform:translateY(-8px) scale(.98);transition:all .25s cubic-bezier(.25,.46,.45,.94);z-index:300;padding:12px;border:1px solid var(--border)}
+.notif-dropdown.open{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+.notif-dropdown .notif-header{display:flex;justify-content:space-between;align-items:center;padding:4px 8px 12px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.notif-dropdown .notif-header h4{font-size:15px;font-weight:600}
+.notif-dropdown .notif-header button{font-size:12px;color:var(--primary);font-weight:500}
+.notif-item{display:flex;gap:12px;padding:10px 8px;border-radius:10px;cursor:pointer;transition:background .15s}
+.notif-item:hover{background:var(--bg)}
+.notif-item .notif-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.notif-item .notif-icon.booking{background:#fef3c7}
+.notif-item .notif-icon.message{background:#dbeafe}
+.notif-item .notif-icon.confirmed{background:#d1fae5}
+.notif-item .notif-content{flex:1;min-width:0}
+.notif-item .notif-title{font-size:14px;font-weight:500;color:#111}
+.notif-item .notif-text{font-size:13px;color:#888;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-item .notif-time{font-size:11px;color:#bbb;margin-top:2px}
+.notif-item.unread{background:#f5f5f5;border-left:3px solid var(--primary)}
+
+/* ─── Chat Modal ─── */
+.chat-modal{display:flex;gap:16px;min-height:400px}
+.chat-conversations{width:240px;flex-shrink:0;border-right:1px solid var(--border);padding-right:12px;overflow-y:auto;max-height:400px}
+.chat-conversation{padding:10px 12px;border-radius:10px;cursor:pointer;transition:background .15s;margin-bottom:4px}
+.chat-conversation:hover{background:var(--bg)}
+.chat-conversation.active{background:#f0f0f0}
+.chat-conversation .chat-other{font-size:14px;font-weight:500;color:#111}
+.chat-conversation .chat-preview{font-size:12px;color:#999;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-conversation .chat-unread{display:inline-block;background:var(--primary);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px}
+.chat-main{flex:1;display:flex;flex-direction:column}
+.chat-messages{flex:1;overflow-y:auto;max-height:340px;padding:8px 4px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{max-width:80%;padding:10px 16px;border-radius:16px;font-size:14px;line-height:1.4;word-wrap:break-word}
+.chat-msg.sent{background:var(--primary);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-msg.received{background:#f0f0f0;color:#222;align-self:flex-start;border-bottom-left-radius:4px}
+.chat-msg .chat-msg-time{font-size:10px;opacity:.6;margin-top:4px;text-align:right}
+.chat-input{display:flex;gap:8px;margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
+.chat-input input{flex:1;border:1px solid #ddd;border-radius:24px;padding:10px 18px;font-size:14px;outline:none;transition:border-color .2s}
+.chat-input input:focus{border-color:var(--primary)}
+.chat-input button{width:40px;height:40px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s}
+.chat-input button:hover{background:var(--primary-dark)}
+.chat-empty{text-align:center;padding:60px 20px;color:#bbb;font-size:15px}
+.chat-empty-title{font-size:18px;font-weight:600;color:#888;margin-bottom:6px}
+
+/* ─── Payment Method ─── */
+.payment-methods{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.payment-option{flex:1;min-width:80px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 8px;border:1.5px solid #ddd;border-radius:12px;cursor:pointer;transition:all .2s;font-size:12px;font-weight:500;color:#888;background:#fff}
+.payment-option:hover{border-color:var(--primary);color:var(--primary)}
+.payment-option.selected{border-color:var(--primary);background:#fff5f6;color:var(--primary)}
+.payment-option .pay-icon{font-size:24px}
+
+/* ─── Map Toggle ─── */
+.map-toggle{display:flex;gap:0;margin-bottom:10px;border:1px solid #ddd;border-radius:10px;overflow:hidden;width:fit-content}
+.map-toggle button{padding:6px 16px;font-size:13px;font-weight:500;background:#fff;color:#888;border:none;cursor:pointer;transition:all .2s}
+.map-toggle button:first-child{border-right:1px solid #ddd}
+.map-toggle button.active{background:var(--primary);color:#fff}
 </style>
 </head>
 <body>
@@ -368,8 +430,21 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 <header>
   <div class="header-inner">
     <a class="logo" href="/" onclick="home()"><img src="/image-cover.png" alt="ONETOONE.booking"></a>
-    <div class="header-right">
+      <div class="header-right">
       <button class="btn-ghost btn-sm" id="becomeHostBtn" onclick="becomeHost()">Devenez hôte</button>
+      <div style="position:relative">
+        <div class="notif-btn" id="notifBtn" style="display:none" onclick="toggleNotifications()">
+          <span>&#128276;</span>
+          <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+        </div>
+        <div class="notif-dropdown" id="notifDropdown">
+          <div class="notif-header">
+            <h4>Notifications</h4>
+            <button onclick="markAllNotifRead()">Tout marquer lu</button>
+          </div>
+          <div id="notifList"><div style="text-align:center;padding:20px;color:#bbb">Aucune notification</div></div>
+        </div>
+      </div>
       <div class="user-menu" id="userMenu">
         <button class="user-btn" onclick="toggleDropdown()">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h11A1.5 1.5 0 0 1 15 2.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 1 13.5v-11z"/></svg>
@@ -383,6 +458,7 @@ main{max-width:1440px;margin:0 auto;padding:24px}
             <button class="dropdown-item" onclick="showProfile()">&#128100; Profil</button>
             <button class="dropdown-item" onclick="showMyBookings()">&#128197; Mes réservations</button>
             <hr>
+            <button class="dropdown-item" onclick="openChat()">&#128172; Messagerie</button>
             <button class="dropdown-item" id="hostDropdownBtn" style="display:none" onclick="showHostDashboard()">&#127968; Tableau de bord hôte</button>
             <button class="dropdown-item" id="clientModeBtn" style="display:none" onclick="toggleClientMode()">&#128100; Mode client</button>
             <button class="dropdown-item" onclick="becomeHost()">&#127958; Devenez hôte</button>
@@ -445,6 +521,28 @@ main{max-width:1440px;margin:0 auto;padding:24px}
 
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- Chat Modal (hidden by default) -->
+<div class="modal-overlay" id="chatOverlay" style="z-index:350">
+  <div class="modal modal-xl" style="max-width:800px">
+    <div class="modal-header">
+      <h3>Messagerie</h3>
+      <button class="modal-close" onclick="closeChat()">&times;</button>
+    </div>
+    <div class="modal-body" id="chatBody" style="padding:16px">
+      <div class="chat-modal">
+        <div class="chat-conversations" id="chatConversations"></div>
+        <div class="chat-main">
+          <div id="chatMessages" class="chat-messages"><div class="chat-empty"><div class="chat-empty-title">&#128172; Sélectionnez une conversation</div><p>Choisissez une conversation pour commencer à discuter</p></div></div>
+          <div id="chatInputArea" class="chat-input" style="display:none">
+            <input id="chatInput" placeholder="Écrivez votre message..." onkeydown="if(event.key==='Enter')sendMessage()">
+            <button onclick="sendMessage()">&#10148;</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = 'https://onetoonebooking.onrender.com'
 let state = { user: null, token: null, listings: [], currentListing: null, currentSort: 'rating', currentCategory: null, currentSearch: '' }
@@ -492,6 +590,180 @@ function updateUI() {
   document.getElementById('clientModeBtn').innerHTML = clientMode ? '&#127968; Mode hôte' : '&#128100; Mode client'
   const banner = document.getElementById('verifyBanner')
   if (u && !u.verified) { banner.style.display = 'flex' } else { banner.style.display = 'none' }
+  const notifBtn = document.getElementById('notifBtn')
+  if (u) { notifBtn.style.display = 'flex'; refreshNotifCount() } else { notifBtn.style.display = 'none' }
+}
+
+/* ─── Notifications ─── */
+let notifInterval = null
+async function refreshNotifCount() {
+  if (!state.token) { document.getElementById('notifBadge').style.display = 'none'; return }
+  try {
+    const r = await fetch(`${API}/api/notifications/unread-count`, { headers: { 'Authorization': `Bearer ${state.token}` } })
+    const d = await safeJson(r)
+    if (d.count > 0) { document.getElementById('notifBadge').textContent = d.count > 99 ? '99+' : d.count; document.getElementById('notifBadge').style.display = 'flex' }
+    else { document.getElementById('notifBadge').style.display = 'none' }
+  } catch {}
+}
+
+function toggleNotifications() {
+  const dd = document.getElementById('notifDropdown')
+  dd.classList.toggle('open')
+  if (dd.classList.contains('open')) loadNotifications()
+}
+
+async function loadNotifications() {
+  try {
+    const r = await fetch(`${API}/api/notifications`, { headers: { 'Authorization': `Bearer ${state.token}` } })
+    const notifs = await safeJson(r)
+    const icons = { booking:'📋', message:'💬', confirmed:'✅', cancelled:'❌' }
+    document.getElementById('notifList').innerHTML = notifs.length
+      ? notifs.map(n => `<div class="notif-item${n.read?'':' unread'}" onclick="markNotifRead(${n.id})">
+          <div class="notif-icon ${n.type}">${icons[n.type]||'🔔'}</div>
+          <div class="notif-content">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-text">${n.message||''}</div>
+            <div class="notif-time">${timeAgo(n.createdAt)}</div>
+          </div>
+        </div>`).join('')
+      : '<div style="text-align:center;padding:20px;color:#bbb">Aucune notification</div>'
+  } catch {}
+}
+
+function timeAgo(date) {
+  const diff = Date.now() - new Date(date).getTime()
+  const mins = Math.floor(diff/60000)
+  if (mins < 1) return 'À l\'instant'
+  if (mins < 60) return `Il y a ${mins} min`
+  const hrs = Math.floor(mins/60)
+  if (hrs < 24) return `Il y a ${hrs}h`
+  const days = Math.floor(hrs/24)
+  if (days < 7) return `Il y a ${days}j`
+  return new Date(date).toLocaleDateString('fr-FR')
+}
+
+async function markNotifRead(id) {
+  try {
+    await fetch(`${API}/api/notifications/read`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ id }) })
+    refreshNotifCount(); loadNotifications()
+  } catch {}
+}
+async function markAllNotifRead() {
+  try {
+    await fetch(`${API}/api/notifications/read`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({}) })
+    refreshNotifCount(); loadNotifications()
+  } catch {}
+}
+
+setInterval(() => { if (state.token) refreshNotifCount() }, 15000)
+
+/* ─── Chat / Messagerie ─── */
+let chatListingId = null, chatOtherId = null, chatOtherName = ''
+
+function openChat(listingId, otherId, otherName) {
+  if (!state.user) { showAuth(); return }
+  chatListingId = listingId || null; chatOtherId = otherId || null; chatOtherName = otherName || ''
+  closeDropdown()
+  document.getElementById('chatOverlay').classList.add('open')
+  document.body.style.overflow = 'hidden'
+  loadConversations()
+}
+
+function closeChat() {
+  document.getElementById('chatOverlay').classList.remove('open')
+  document.body.style.overflow = ''
+}
+
+async function loadConversations() {
+  try {
+    const r = await fetch(`${API}/api/conversations`, { headers: { 'Authorization': `Bearer ${state.token}` } })
+    const convos = await safeJson(r)
+    const list = document.getElementById('chatConversations')
+    list.innerHTML = convos.map(c => `<div class="chat-conversation${chatListingId==c.listingId&&chatOtherId==c.otherId?' active':''}" onclick="selectConversation('${c.listingId}','${c.otherId}','${c.otherName}')">
+      <div class="chat-other">${c.otherName}${c.unread?' <span class="chat-unread">'+c.unread+'</span>':''}</div>
+      <div class="chat-preview">${c.listingTitle} · ${c.lastMessage||''}</div>
+    </div>`).join('')
+    if (chatListingId && chatOtherId) loadMessages()
+  } catch {}
+}
+
+function selectConversation(listingId, otherId, otherName) {
+  chatListingId = listingId; chatOtherId = otherId; chatOtherName = otherName
+  loadConversations()
+}
+
+async function loadMessages() {
+  try {
+    const r = await fetch(`${API}/api/messages/${chatListingId}/${chatOtherId}`, { headers: { 'Authorization': `Bearer ${state.token}` } })
+    const msgs = await safeJson(r)
+    const container = document.getElementById('chatMessages')
+    container.innerHTML = msgs.length
+      ? msgs.map(m => `<div class="chat-msg ${m.senderId==state.user.id?'sent':'received'}">
+          <div>${m.content}</div>
+          <div class="chat-msg-time">${new Date(m.createdAt).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>`).join('')
+      : `<div class="chat-empty"><div class="chat-empty-title">💬 ${chatOtherName}</div><p>Commencez votre conversation</p></div>`
+    container.scrollTop = container.scrollHeight
+    document.getElementById('chatInputArea').style.display = 'flex'
+    refreshNotifCount()
+  } catch {}
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chatInput')
+  const content = input.value.trim()
+  if (!content) return
+  input.value = ''
+  try {
+    await fetch(`${API}/api/messages`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ listingId: chatListingId, receiverId: chatOtherId, content }) })
+    loadMessages()
+  } catch (err) { toast(err.message, 'error') }
+}
+
+document.getElementById('chatOverlay').addEventListener('click', e => { if (e.target === e.currentTarget) closeChat() })
+
+/* ─── Map (Leaflet) ─── */
+let detailMap = null
+
+function initDetailMap() {
+  if (detailMap) { detailMap.remove(); detailMap = null }
+  const container = document.getElementById('detailMap')
+  if (!container) return
+  const lat = parseFloat(container.dataset.lat) || 48.85
+  const lng = parseFloat(container.dataset.lng) || 2.333
+  detailMap = L.map(container).setView([lat, lng], 14)
+  const stdLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' })
+  const satLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: '© Esri' })
+  stdLayer.addTo(detailMap)
+  L.marker([lat, lng]).addTo(detailMap)
+  detailMap._stdLayer = stdLayer
+  detailMap._satLayer = satLayer
+  setTimeout(() => detailMap.invalidateSize(), 500)
+}
+
+function switchMapLayer(layer, btn) {
+  const container = document.getElementById('detailMap')
+  if (!container || !detailMap) return
+  const lat = parseFloat(container.dataset.lat) || 48.85
+  const lng = parseFloat(container.dataset.lng) || 2.333
+  if (layer === 'satellite') {
+    detailMap.removeLayer(detailMap._stdLayer)
+    detailMap._satLayer.addTo(detailMap)
+  } else {
+    detailMap.removeLayer(detailMap._satLayer)
+    detailMap._stdLayer.addTo(detailMap)
+  }
+  detailMap.setView([lat, lng], 14)
+  btn.closest('.map-toggle').querySelectorAll('button').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  setTimeout(() => detailMap.invalidateSize(), 300)
+}
+
+/* ─── Payment method selector ─── */
+function selectPayment(el, method) {
+  el.closest('.payment-methods').querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'))
+  el.classList.add('selected')
+  el.closest('form').querySelector('[name="paymentMethod"]').value = method
 }
 
 /* ─── Auth modal ─── */
@@ -615,6 +887,7 @@ document.getElementById('modalOverlay').addEventListener('click', e => { if (e.t
 
 /* ─── Home ─── */
 function home() {
+  if (detailMap) { detailMap.remove(); detailMap = null }
   if (scrollSpyCleanup) { scrollSpyCleanup(); scrollSpyCleanup = null }
   state.currentCategory = null; state.currentSearch = ''
   const main = document.getElementById('main')
@@ -876,9 +1149,11 @@ async function showListingDetail(id) {
             <section class="detail-section" id="section-location">
               <h2>Emplacement</h2>
               <p style="margin-bottom:12px">${l.city}, ${l.country}</p>
-              <div class="map-container">
-                <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=${(l.lng||2.333)-0.03}%2C${(l.lat||48.85)-0.02}%2C${(l.lng||2.333)+0.03}%2C${(l.lat||48.85)+0.02}&amp;layer=mapnik&amp;marker=${l.lat||48.85}%2C${l.lng||2.333}" loading="lazy"></iframe>
+              <div class="map-toggle">
+                <button class="active" onclick="switchMapLayer('standard',this)" data-lat="${l.lat||48.85}" data-lng="${l.lng||2.333}">Plan</button>
+                <button onclick="switchMapLayer('satellite',this)" data-lat="${l.lat||48.85}" data-lng="${l.lng||2.333}">Satellite</button>
               </div>
+              <div class="map-container" id="detailMap" data-lat="${l.lat||48.85}" data-lng="${l.lng||2.333}"></div>
             </section>
 
             <section class="detail-section" id="section-host">
@@ -892,7 +1167,7 @@ async function showListingDetail(id) {
                   <div class="host-meta" style="margin-top:6px">${hostYears ? 'Hôte depuis ' + hostYears + ' ans' : 'Nouvel hôte'} · ${l.reviewCount} avis</div>
                   <div class="host-meta">Taux de réponse : 100 % · Temps de réponse : &lt; 1h</div>
                   <div style="margin-top:14px;display:flex;gap:8px">
-                    <button class="btn btn-outline btn-sm" style="border-radius:8px;padding:8px 20px" onclick="toast('Message envoyé à l\'hôte','info')">✉️ Contacter l'hôte</button>
+                    <button class="btn btn-outline btn-sm" style="border-radius:8px;padding:8px 20px" onclick="openChat('${l.id}','${l.hostId}','${l.hostName}')">✉️ Contacter l'hôte</button>
                   </div>
                 </div>
               </div>
@@ -913,6 +1188,13 @@ async function showListingDetail(id) {
                   </div>
                 </div>
                 <div class="guest-field"><label>Voyageurs</label><select name="guests">${Array.from({length:l.guests||1},(_,i)=>`<option value="${i+1}">${i+1} voyageur${i>0?'s':''}</option>`).join('')}</select></div>
+                <label style="font-size:12px;font-weight:600;color:#999;display:block;margin-bottom:6px">MODE DE PAIEMENT</label>
+                <div class="payment-methods">
+                  <div class="payment-option selected" onclick="selectPayment(this,'carte')"><span class="pay-icon">💳</span>Carte</div>
+                  <div class="payment-option" onclick="selectPayment(this,'paypal')"><span class="pay-icon">🅿️</span>PayPal</div>
+                  <div class="payment-option" onclick="selectPayment(this,'virement')"><span class="pay-icon">🏦</span>Virement</div>
+                </div>
+                <input type="hidden" name="paymentMethod" value="carte">
                 <div class="price-breakdown"><div class="price-breakdown-empty">Ajoutez vos dates pour obtenir le prix total</div></div>
                 <button type="submit" class="btn btn-primary btn-reserve">Réserver</button>
                 <p class="booking-note">Vous ne serez pas débité pour le moment</p>
@@ -922,6 +1204,7 @@ async function showListingDetail(id) {
         </div>
       </div>`
     setupScrollSpy()
+    setTimeout(initDetailMap, 300)
   } catch (err) { toast(err.message, 'error') }
 }
 
@@ -932,10 +1215,10 @@ async function handleBooking(e, listingId) {
   const checkIn = fd.get('checkIn'); const checkOut = fd.get('checkOut')
   if (checkOut <= checkIn) { toast('Le départ doit être après l\'arrivée', 'error'); return }
   try {
-    const r = await fetch(`${API}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ listingId, checkIn, checkOut, guests: Number(fd.get('guests'))||1, message: '' }) })
+    const r = await fetch(`${API}/api/bookings`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` }, body: JSON.stringify({ listingId, checkIn, checkOut, guests: Number(fd.get('guests'))||1, message: '', paymentMethod: fd.get('paymentMethod')||'carte' }) })
     const d = await safeJson(r)
     if (!r.ok) throw new Error(d.error || 'Erreur réservation')
-    toast(d.message, 'success')
+    toast('✅ ' + d.message, 'success')
     document.getElementById('modalOverlay').classList.remove('open')
     document.body.style.overflow = ''
   } catch (err) { toast(err.message, 'error') }
@@ -945,6 +1228,7 @@ async function handleBooking(e, listingId) {
 let hostTab = 'listings'
 
 function showHostDashboard() {
+  if (detailMap) { detailMap.remove(); detailMap = null }
   if (scrollSpyCleanup) { scrollSpyCleanup(); scrollSpyCleanup = null }
   closeDropdown(); closeModal()
   const main = document.getElementById('main')
@@ -1417,5 +1701,6 @@ loadAuth()
 loadListings()
 loadCategories()
 </script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 </body>
 </html>

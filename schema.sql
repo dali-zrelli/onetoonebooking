@@ -58,3 +58,27 @@ CREATE TABLE IF NOT EXISTS reviews (
   comment TEXT,
   createdAt TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS paymentMethod TEXT DEFAULT 'carte';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS paymentStatus TEXT DEFAULT 'en_attente';
+
+CREATE TABLE IF NOT EXISTS messages (
+  id SERIAL PRIMARY KEY,
+  listingId TEXT REFERENCES listings(id),
+  senderId TEXT REFERENCES users(id),
+  receiverId TEXT REFERENCES users(id),
+  content TEXT NOT NULL,
+  read BOOLEAN DEFAULT false,
+  createdAt TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id SERIAL PRIMARY KEY,
+  userId TEXT REFERENCES users(id),
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT,
+  relatedId TEXT,
+  read BOOLEAN DEFAULT false,
+  createdAt TIMESTAMPTZ DEFAULT NOW()
+);
