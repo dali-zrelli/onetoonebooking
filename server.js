@@ -115,11 +115,36 @@ function auth(req, res, next) {
   catch { res.status(401).json({ error: 'Token invalide' }) }
 }
 
+// PostgreSQL folds unquoted identifiers to lowercase.
+// This helper renames common lowered keys to their camelCase form
+// so the frontend always receives the correct property names.
+const CASE_MAP = {
+  hostid:'hostId', hostname:'hostName', hostsince:'hostSince',
+  listingid:'listingId', userid:'userId',
+  checkin:'checkIn', checkout:'checkOut',
+  totalprice:'totalPrice', createdat:'createdAt',
+  reviewcount:'reviewCount', guestname:'guestName',
+  guestemail:'guestEmail', listingprice:'listingPrice',
+  bookingcount:'bookingCount',
+  verificationtoken:'verificationToken',
+}
+
+function fixCase(obj) {
+  if (!obj) return obj
+  for (const [k, v] of Object.entries(CASE_MAP)) {
+    if (obj[k] !== undefined && k !== v) {
+      obj[v] = obj[k]
+      delete obj[k]
+    }
+  }
+  return obj
+}
+
 function formatListing(l) {
   if (!l) return null
   l.images = l.images ? l.images.split('|') : []
   l.amenities = l.amenities ? l.amenities.split(', ') : []
-  return l
+  return fixCase(l)
 }
 
 /* ─── Auth ─── */
@@ -143,10 +168,10 @@ app.post('/api/auth/signup', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body
-    const user = await queryOne('SELECT * FROM users WHERE email = ?', [email])
+    const user = fixCase(await queryOne('SELECT * FROM users WHERE email = ?', [email]))
     if (!user || !bcrypt.compareSync(password, user.password)) return res.status(401).json({ error: 'Email ou mot de passe incorrect' })
-    const token = jwt.sign({ id:user.id, name:user.name, email:user.email, isHost:user.isHost, verified:user.verified }, JWT_SECRET, { expiresIn:'7d' })
-    res.json({ token, user:{ id:user.id, name:user.name, email:user.email, isHost:user.isHost, verified:user.verified } })
+    const token = jwt.sign({ id:user.id, name:user.name, email:user.email, isHost:user.isHost||0, verified:user.verified }, JWT_SECRET, { expiresIn:'7d' })
+    res.json({ token, user:{ id:user.id, name:user.name, email:user.email, isHost:user.isHost||0, verified:user.verified } })
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
@@ -154,7 +179,7 @@ app.get('/api/auth/me', auth, async (req, res) => {
   try {
     const u = await queryOne('SELECT id,name,email,isHost,hostSince,phone,verified FROM users WHERE id = ?', [req.user.id])
     if (!u) return res.status(404).json({ error: 'Utilisateur non trouvé' })
-    res.json(u)
+    res.json(fixCase(u))
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
@@ -177,7 +202,7 @@ app.get('/api/auth/verify-email', async (req, res) => {
 
 app.post('/api/auth/resend-verification', auth, async (req, res) => {
   try {
-    const user = await queryOne('SELECT * FROM users WHERE id = ?', [req.user.id])
+    const user = fixCase(await queryOne('SELECT * FROM users WHERE id = ?', [req.user.id]))
     if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' })
     if (user.verified) return res.json({ message: 'Email déjà vérifié' })
     const verificationToken = user.verificationToken || uuidv4()
@@ -298,9 +323,10 @@ app.delete('/api/listings/:id', auth, async (req, res) => {
 app.post('/api/bookings', auth, async (req, res) => {
   try {
     const { listingId, checkIn, checkOut, guests, message } = req.body
-    const listing = await queryOne('SELECT l.*, u.name as hostName, u.email as hostEmail FROM listings l JOIN users u ON l.hostId = u.id WHERE l.id = ? AND l.active = 1', [listingId])
-    if (!listing) return res.status(404).json({ error: 'Logement non trouvé' })
-    if (listing.hostId === req.user.id) return res.status(400).json({ error: 'Vous ne pouvez pas réserver votre propre logement' })
+    const raw = await queryOne('SELECT l.*, u.name as hostName, u.email as hostEmail FROM listings l JOIN users u ON l.hostId = u.id WHERE l.id = ? AND l.active = 1', [listingId])
+    if (!raw) return res.status(404).json({ error: 'Logement non trouvé' })
+    const listing = fixCase(raw)
+    if (listing.hostId === req.user.id) return res.status(400).json({ error: 'Vous ne pouvez pas réserver votre logement' })
     const existing = await queryOne('SELECT id FROM bookings WHERE listingId = ? AND status != \'annulé\' AND ((checkIn BETWEEN ? AND ?) OR (checkOut BETWEEN ? AND ?) OR (? BETWEEN checkIn AND checkOut))',
       [listingId, checkIn, checkOut, checkIn, checkOut, checkIn])
     if (existing) return res.status(409).json({ error: 'Ces dates sont déjà réservées' })
@@ -317,7 +343,7 @@ app.post('/api/bookings', auth, async (req, res) => {
 app.get('/api/bookings', auth, async (req, res) => {
   try {
     const rows = await query('SELECT b.*, l.title, l.images, l.price as listingPrice, l.city, u.name as hostName FROM bookings b JOIN listings l ON b.listingId = l.id JOIN users u ON l.hostId = u.id WHERE b.userId = ? ORDER BY b.createdAt DESC', [req.user.id])
-    res.json(rows.map(b => ({ ...b, images: b.images ? b.images.split('|')[0] : '' })))
+    res.json(rows.map(b => fixCase({ ...b, images: b.images ? b.images.split('|')[0] : '' })))
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
@@ -325,8 +351,9 @@ app.put('/api/bookings/:id/status', auth, async (req, res) => {
   try {
     const { status } = req.body
     if (!['confirmé','annulé','terminé'].includes(status)) return res.status(400).json({ error: 'Statut invalide' })
-    const booking = await queryOne('SELECT b.*, l.hostId, l.title as listingTitle FROM bookings b JOIN listings l ON b.listingId = l.id WHERE b.id = ?', [req.params.id])
-    if (!booking) return res.status(404).json({ error: 'Réservation non trouvée' })
+    const raw = await queryOne('SELECT b.*, l.hostId, l.title as listingTitle FROM bookings b JOIN listings l ON b.listingId = l.id WHERE b.id = ?', [req.params.id])
+    if (!raw) return res.status(404).json({ error: 'Réservation non trouvée' })
+    const booking = fixCase(raw)
     if (booking.hostId !== req.user.id && booking.userId !== req.user.id) return res.status(403).json({ error: 'Non autorisé' })
     await run('UPDATE bookings SET status = ? WHERE id = ?', [status, req.params.id])
     queryOne('SELECT name, email FROM users WHERE id = ?', [booking.userId]).then(guest => {
@@ -339,8 +366,9 @@ app.put('/api/bookings/:id/status', auth, async (req, res) => {
 
 app.delete('/api/bookings/:id', auth, async (req, res) => {
   try {
-    const booking = await queryOne('SELECT b.*, l.hostId FROM bookings b JOIN listings l ON b.listingId = l.id WHERE b.id = ?', [req.params.id])
-    if (!booking) return res.status(404).json({ error: 'Réservation non trouvée' })
+    const raw = await queryOne('SELECT b.*, l.hostId FROM bookings b JOIN listings l ON b.listingId = l.id WHERE b.id = ?', [req.params.id])
+    if (!raw) return res.status(404).json({ error: 'Réservation non trouvée' })
+    const booking = fixCase(raw)
     if (booking.userId !== req.user.id && booking.hostId !== req.user.id) return res.status(403).json({ error: 'Non autorisé' })
     await run('DELETE FROM bookings WHERE id = ?', [req.params.id])
     res.json({ message: 'Réservation supprimée' })
@@ -351,7 +379,7 @@ app.delete('/api/bookings/:id', auth, async (req, res) => {
 app.get('/api/host/bookings', auth, async (req, res) => {
   try {
     const bookings = await query('SELECT b.*, l.title, l.images, l.price as listingPrice, l.city, u.name as guestName, u.email as guestEmail FROM bookings b JOIN listings l ON b.listingId = l.id JOIN users u ON b.userId = u.id WHERE l.hostId = ? ORDER BY b.createdAt DESC', [req.user.id])
-    res.json(bookings.map(b => ({ ...b, images: b.images ? b.images.split('|')[0] : '' })))
+    res.json(bookings.map(b => fixCase({ ...b, images: b.images ? b.images.split('|')[0] : '' })))
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 

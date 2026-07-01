@@ -867,6 +867,7 @@ async function deleteClientBooking(id) {
 
 /* ─── Listing Editor (Create/Edit) ─── */
 async function showListingEditor(id = null) {
+  uploadedUrls = []
   let l = null
   if (id) {
     try {
@@ -998,11 +999,22 @@ async function handleListingSubmit(e, id) {
 /* ─── Image Upload ─── */
 let uploadedUrls = []
 
+function renderLocalPreviews(files) {
+  const container = document.getElementById('imagePreviews')
+  container.innerHTML = ''
+  Array.from(files).forEach(f => {
+    const url = URL.createObjectURL(f)
+    container.innerHTML += `<div class="preview-item"><img src="${url}"><span style="position:absolute;bottom:4px;right:4px;font-size:10px;background:rgba(0,0,0,.5);color:#fff;padding:2px 6px;border-radius:4px">local</span></div>`
+  })
+}
+
 document.addEventListener('change', function(e) {
   if (e.target.id === 'imageInput') {
-    const count = e.target.files.length
+    const files = e.target.files
+    const count = files.length
     document.getElementById('fileCount').textContent = count + ' fichier(s) sélectionné(s)'
     document.getElementById('uploadBar').style.display = count ? '' : 'none'
+    renderLocalPreviews(files)
   }
 })
 
