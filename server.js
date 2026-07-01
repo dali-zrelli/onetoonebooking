@@ -142,8 +142,8 @@ function fixCase(obj) {
 
 function formatListing(l) {
   if (!l) return null
-  l.images = l.images ? l.images.split('|') : []
-  l.amenities = l.amenities ? l.amenities.split(', ') : []
+  l.images = l.images ? l.images.split('|').filter(Boolean) : []
+  l.amenities = l.amenities ? l.amenities.split(', ').filter(Boolean) : []
   return fixCase(l)
 }
 
@@ -288,10 +288,11 @@ app.post('/api/listings', auth, async (req, res) => {
     const id = uuidv4()
     const imgStr = Array.isArray(images) ? images.join('|') : (images || '')
     const amenStr = Array.isArray(amenities) ? amenities.join(', ') : (amenities || '')
+    console.log(`  Create listing: images count=${Array.isArray(images) ? images.length : typeof images}, imgStr="${imgStr.slice(0,80)}..."`)
     await run('INSERT INTO listings (id,hostId,title,description,type,category,city,country,price,images,guests,bedrooms,beds,baths,amenities,lat,lng,active) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
       [id, req.user.id, title, description || '', type, category || 'ville', city, country || 'France', Number(price), imgStr, Number(guests)||2, Number(bedrooms)||1, Number(beds)||1, Number(baths)||1, amenStr, lat||null, lng||null, 1])
     res.json({ id, message: 'Logement créé !' })
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) { console.error('  Create listing error:', e.message); res.status(500).json({ error: e.message }) }
 })
 
 app.put('/api/listings/:id', auth, async (req, res) => {
@@ -300,6 +301,7 @@ app.put('/api/listings/:id', auth, async (req, res) => {
     if (!listing) return res.status(404).json({ error: 'Logement non trouvé ou non autorisé' })
     const { title, description, type, category, city, country, price, images, guests, bedrooms, beds, baths, amenities, lat, lng, active } = req.body
     const imgStr = Array.isArray(images) ? images.join('|') : (images !== undefined ? images : listing.images)
+    console.log(`  Update listing ${req.params.id}: images type=${typeof images}, isArray=${Array.isArray(images)}, imgStr="${(imgStr||'').slice(0,80)}"`)
     const amenStr = Array.isArray(amenities) ? amenities.join(', ') : (amenities !== undefined ? amenities : listing.amenities)
     await run('UPDATE listings SET title=?,description=?,type=?,category=?,city=?,country=?,price=?,images=?,guests=?,bedrooms=?,beds=?,baths=?,amenities=?,lat=?,lng=?,active=? WHERE id=?',
       [title||listing.title, description!==undefined?description:listing.description, type||listing.type, category||listing.category, city||listing.city, country||listing.country,
@@ -414,8 +416,9 @@ app.post('/api/upload', auth, upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'Aucune image fournie' })
     const b64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`
     const result = await cloudinary.uploader.upload(b64, { folder: 'onetoneone', resource_type: 'image' })
+    console.log(`  Upload OK: ${result.public_id} → ${result.secure_url}`)
     res.json({ url: result.secure_url, publicId: result.public_id })
-  } catch (e) { res.status(500).json({ error: e.message }) }
+  } catch (e) { console.error('  Upload error:', e.message); res.status(500).json({ error: e.message }) }
 })
 
 app.post('/api/upload-multiple', auth, upload.array('images', 10), async (req, res) => {
