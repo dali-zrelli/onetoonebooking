@@ -519,7 +519,6 @@ function home() {
     <div class="listings-grid" id="listingsGrid"></div>
   `
   loadListings(); loadCategories()
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'))
 }
 
 /* ─── Categories ─── */
@@ -531,18 +530,18 @@ async function loadCategories() {
     const icons = { maisons:'🏠', 'sejour-nature':'🌿', montagne:'⛰️', plage:'🏖️', ville:'🏙️', camping:'🏕️', piscine:'🏊', vignobles:'🍷', insolite:'✨', arctique:'❄️' }
     const labels = { maisons:'Maisons', 'sejour-nature':'Séjour nature', montagne:'Montagne', plage:'Plage', ville:'Ville', camping:'Camping', piscine:'Piscine', vignobles:'Vignobles', insolite:'Insolite', arctique:'Arctique' }
     const c = document.getElementById('categories')
-    c.innerHTML = `<button class="cat-btn active" onclick="filterCategory('')"><span class="cat-icon">🌟</span>Tout</button>`
+    c.innerHTML = `<button class="cat-btn active" data-cat="" onclick="filterCategory('', this)"><span class="cat-icon">🌟</span>Tout</button>`
     cats.forEach(cat => {
-      c.innerHTML += `<button class="cat-btn" onclick="filterCategory('${cat.category}')"><span class="cat-icon">${icons[cat.category]||'📍'}</span>${labels[cat.category]||cat.category}</button>`
+      c.innerHTML += `<button class="cat-btn" data-cat="${cat.category}" onclick="filterCategory('${cat.category}', this)"><span class="cat-icon">${icons[cat.category]||'📍'}</span>${labels[cat.category]||cat.category}</button>`
     })
   } catch {}
 }
 
-function filterCategory(cat) {
+function filterCategory(cat, el) {
   state.currentCategory = cat
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'))
-  event.target.closest('.cat-btn').classList.add('active')
-  document.getElementById('sectionTitle').textContent = cat ? document.querySelector('.cat-btn.active').textContent.trim() : 'Logements populaires'
+  if (el) el.classList.add('active')
+  document.getElementById('sectionTitle').textContent = cat ? (el ? el.textContent.trim() : cat) : 'Logements populaires'
   loadListings()
 }
 
@@ -957,8 +956,12 @@ async function showListingEditor(id = null) {
           <textarea name="amenities" id="amenityInput" style="display:none">${l?.amenities?.join(', ')||''}</textarea>
         </div>
       </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <button type="button" class="btn btn-outline" onclick="closeModal()">Annuler</button>
+        <button type="submit" class="btn btn-primary">${btnText}</button>
+      </div>
     </form>
-  `, `<button class="btn btn-outline" onclick="closeModal()">Annuler</button><button class="btn btn-primary" onclick="document.getElementById('listingForm').requestSubmit()">${btnText}</button>`, true, true)
+  `, '', true, true)
 }
 
 function toggleAmenity(el) {
@@ -977,8 +980,8 @@ async function handleListingSubmit(e, id) {
     city: fd.get('city'), country: fd.get('country'),
     price: Number(fd.get('price')), guests: Number(fd.get('guests')),
     bedrooms: Number(fd.get('bedrooms')), beds: Number(fd.get('beds')), baths: Number(fd.get('baths')),
-    images: fd.get('images').split(/[\n,]+/).map(s => s.trim()).filter(Boolean),
-    amenities: fd.get('amenities').split(/,\s*/).map(s => s.trim()).filter(Boolean),
+    images: (fd.get('images')||'').split(/[\n,]+/).map(s => s.trim()).filter(Boolean),
+    amenities: (fd.get('amenities')||'').split(/,\s*/).map(s => s.trim()).filter(Boolean),
     lat: fd.get('lat') ? Number(fd.get('lat')) : null,
     lng: fd.get('lng') ? Number(fd.get('lng')) : null
   }
