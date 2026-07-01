@@ -83,7 +83,16 @@ let pool
 async function initDb() {
   pool = await findDatabase()
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8')
-  await pool.query(schema)
+  // Execute each statement separately — pg query() does not support
+  // multiple statements in a single call with the extended protocol.
+  const statements = schema.split(';').map(s => s.trim()).filter(Boolean)
+  for (const stmt of statements) {
+    try {
+      await pool.query(stmt)
+    } catch (e) {
+      console.error('  Schema statement error:', e.message)
+    }
+  }
   console.log('✓ Database ready')
 }
 
@@ -231,10 +240,17 @@ app.get('/api/listings/:id', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
+const DEFAULT_CATEGORIES = ['ville','maisons','sejour-nature','montagne','plage','camping','piscine','vignobles','insolite','arctique']
+
 app.get('/api/categories', async (req, res) => {
   try {
     const rows = await query('SELECT category, COUNT(*)::int as count, ROUND(AVG(price),0)::int as avgPrice, ROUND(AVG(rating),2)::numeric as avgRating FROM listings WHERE active = 1 GROUP BY category ORDER BY count DESC')
-    res.json(rows)
+    const catMap = {}
+    rows.forEach(r => catMap[r.category] = r)
+    const merged = DEFAULT_CATEGORIES.map(cat =>
+      catMap[cat] || { category: cat, count: 0, avgPrice: 0, avgRating: 0 }
+    )
+    res.json(merged)
   } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
